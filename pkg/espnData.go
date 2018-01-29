@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"opencfb/pkg/shared"
 	"strconv"
 	"strings"
 	"time"
-	"opencfb/pkg/shared"
 )
 
 func main() {
@@ -116,6 +116,8 @@ func main() {
 }
 
 func generateApiUrl(year string, seasonType string, week string) string {
+	// FBS, group 80
+	// FCS, group 81
 	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?lang=en&region=us&calendartype=blacklist&limit=100&dates=" + year + "&seasontype=" + seasonType + "&week=" + week + "&groups=80"
 }
 

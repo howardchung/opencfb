@@ -4,8 +4,9 @@ import (
 	"bufio"
 	"crypto/sha256"
 	"encoding/binary"
-	_ "github.com/lib/pq"
+	// "fmt"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"log"
 	"opencfb/pkg/shared"
 	"os"
@@ -16,6 +17,7 @@ import (
 )
 
 func main() {
+	log.SetOutput(os.Stdout)
 	db := shared.InitDatabase()
 
 	file, _ := os.Open("./data/jhowell.csv")
@@ -25,10 +27,13 @@ func main() {
 
 	var games []shared.Game
 	var gameTeams []shared.GameTeam
+	var nameMap map[string]bool
+	nameMap = make(map[string]bool)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		s := strings.Split(line, ",")
-		if len(s) < 8 {
+		if len(s) < 9 {
 			continue
 		}
 		monthDay := strings.Split(s[2], "/")
@@ -54,20 +59,23 @@ func main() {
 			homeString, awayString = awayString, homeString
 		}
 		isNeutralSite := strings.HasPrefix(s[8], "@")
+		
+		homeTeam, homeDisplayName := matchTeamStringToId(db, homeString)
+		if !nameMap[homeString] {
+			log.Println(homeTeam, homeString, homeDisplayName)
+			nameMap[homeString] = true
+		}
 
-		homeTeam := matchTeamStringToId(db, homeString)
-		awayTeam := matchTeamStringToId(db, awayString)
+		awayTeam, awayDisplayName := matchTeamStringToId(db, awayString)
+		if !nameMap[awayString] {
+			log.Println(awayTeam, awayString, awayDisplayName)
+			nameMap[awayString] = true
+		}
+
+		// panic(fmt.Sprintf("stop"))
 
 		// Create a game ID
-		homeIntString := strconv.FormatInt(homeTeam, 10)
-		awayIntString := strconv.FormatInt(awayTeam, 10)
-		keyArr := []string{gameDate.Format(time.RFC3339), homeIntString, awayIntString}
-		sort.Strings(keyArr)
-		key := strings.Join(keyArr[:], ":")
-		sum := sha256.Sum256([]byte(key))
-		// Take the first 4 bytes as a Uint32, add 2**32 to avoid collision with espn IDs
-		generatedId := int64(binary.BigEndian.Uint32(sum[0:4])) + 2147483648
-		// log.Println(key, sum, generatedId)
+		generatedId := generateGameId(homeTeam, awayTeam, gameDate)
 
 		games = append(games, shared.Game{
 			Id:    generatedId,
@@ -107,9 +115,46 @@ func main() {
 	}
 }
 
-func matchTeamStringToId(db *sqlx.DB, input string) int64 {
-	// TODO match these to existing teams if possible
+// espn team ids range from 2 to 3200
+// jhowell teams, hash the unique key (name), take the result % (2^32) and add (2^32) (match to espn team by edit distance if possible, otherwise assign id)
+func generateTeamId(string name) {
+	key := name
+	sum := sha256.Sum256([]byte(key))
+	generatedId := int64(binary.BigEndian.Uint32(sum[0:4])) + 2147483648
+	return generatedId
+}
+
+// espn game ids range from 212350097 to 400986609
+// jhowell games, hash the unique key (date, name, opp) sorted, take the result % 2^32 and add 2^32 (games before 2001)
+func generateGameId(int64 homeTeam, int64 awayTeam time.Date gameDate) int64 {
+	homeIntString := strconv.FormatInt(homeTeam, 10)
+	awayIntString := strconv.FormatInt(awayTeam, 10)
+	keyArr := []string{gameDate.Format(time.RFC3339), homeIntString, awayIntString}
+	sort.Strings(keyArr)
+	key := strings.Join(keyArr[:], ":")
+	sum := sha256.Sum256([]byte(key))
+	// Take the first 4 bytes as a Uint32, add 2**32 to avoid collision with espn IDs
+	generatedId := int64(binary.BigEndian.Uint32(sum[0:4])) + 2147483648
+	// log.Println(key, sum, generatedId)
+	return generatedId
+}
+
+func matchTeamStringToId(db *sqlx.DB, input string) (int64, string) {
+	// match these to existing teams if possible
 	// if no match, create a new team ID
+	// skip teams with (non-IA) in the input string
+	if strings.Contains(input, "(non-IA)") {
+		return generateTeamId(input), input
+	}
+	// TODO some teams need to be manually corrected
+	// NorthCarolinaState North Carolina A&T Aggies
+	// 2018/01/29 06:24:45 26 BrighamYoung UCLA Bruins
+	// 2018/01/29 06:24:44 344 Mississippi Mississippi State Bulldogs
+	// 2018/01/29 06:24:44 322 Louisiana-Lafayette Lafayette Leopards
+	// 2018/01/29 06:24:44 2440 Nevada-LasVegas Nevada Wolf Pack
+	// 2018/01/29 06:24:44 256 Marion (non-IA) James Madison Dukes
+	// 2018/01/29 06:24:44 3145 Spring Hill (non-IA) NORTH All-Stars
+	// 2018/01/29 06:24:44 2640 Birmingham-Southern Texas Southern Tigers
 	row := db.QueryRow("SELECT id, displayname from team ORDER BY similarity(displayname, $1) desc", input)
 	var team int64
 	var displayName string
@@ -117,6 +162,5 @@ func matchTeamStringToId(db *sqlx.DB, input string) int64 {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(team, input, displayName)
-	return team
+	return team, displayName
 }
