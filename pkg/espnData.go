@@ -102,6 +102,7 @@ func main() {
 						Color:          competitor.Team.Color,
 						AlternateColor: competitor.Team.AlternateColor,
 						Logo:           competitor.Team.Logo,
+						ConferenceId:   strconv.ParseInt(competitor.Team.ConferenceId, 10, 64),
 					}
 					_, err = db.Exec(`INSERT INTO team VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT(id) DO NOTHING`,
 						team.Id, team.DisplayName, team.Abbreviation, team.Color, team.AlternateColor, team.Logo)

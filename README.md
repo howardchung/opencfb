@@ -8,7 +8,7 @@ Quickstart
 * Install dependencies via Dep: `dep ensure`
 * `bash scripts/init.sh`: Sets up the database
 * `go run pkg/espnData.go`: Fetches data from ESPN and inserts into DB
-* `go run pkg/jhowellFetcher.go `: Fetch data from jhowell and save to CSV file
+* `go run pkg/jhowellFetcher.go`: Fetch data from jhowell and save to CSV file
 * `go run pkg/jhowellData.go`: Import data from CSV file and inserts into DB
 * `go run pkg/api.go`: Starts the API on the `PORT` environment variable
 

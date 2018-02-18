@@ -1,0 +1,1 @@
+docker exec -i opencfb-postgres pg_dump opencfb -U postgres

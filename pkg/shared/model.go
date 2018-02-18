@@ -57,6 +57,7 @@ type Team struct {
 	AlternateColor string
 	Logo           string
 	Rating         int64
+	ConferenceId   int64
 }
 
 type GameTeam struct {
