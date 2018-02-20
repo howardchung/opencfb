@@ -27,6 +27,7 @@ func main() {
 
 	var games []shared.Game
 	var gameTeams []shared.GameTeam
+	var teams []shared.Team
 	var nameMap map[string]bool
 	nameMap = make(map[string]bool)
 
@@ -60,22 +61,22 @@ func main() {
 		}
 		isNeutralSite := strings.HasPrefix(s[8], "@")
 
-		homeTeam, homeDisplayName := matchTeamStringToId(db, homeString)
+		homeTeamId, homeDisplayName := matchTeamStringToId(db, homeString)
 		if !nameMap[homeString] {
-			log.Println(homeTeam, homeString, homeDisplayName)
+			log.Println(homeTeamId, homeString, homeDisplayName)
 			nameMap[homeString] = true
 		}
 
-		awayTeam, awayDisplayName := matchTeamStringToId(db, awayString)
+		awayTeamId, awayDisplayName := matchTeamStringToId(db, awayString)
 		if !nameMap[awayString] {
-			log.Println(awayTeam, awayString, awayDisplayName)
+			log.Println(awayTeamId, awayString, awayDisplayName)
 			nameMap[awayString] = true
 		}
 
 		// panic(fmt.Sprintf("stop"))
 
 		// Create a game ID
-		generatedId := generateGameId(homeTeam, awayTeam, gameDate)
+		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
 
 		games = append(games, shared.Game{
 			Id:    generatedId,
@@ -96,7 +97,7 @@ func main() {
 		}
 		gameTeams = append(gameTeams, shared.GameTeam{
 			GameId: generatedId,
-			TeamId: homeTeam,
+			TeamId: homeTeamId,
 			Score:  homeScore,
 			Field:  homeField,
 			Result: homeResult,
@@ -107,12 +108,28 @@ func main() {
 		}
 		gameTeams = append(gameTeams, shared.GameTeam{
 			GameId: generatedId,
-			TeamId: awayTeam,
+			TeamId: awayTeamId,
 			Score:  awayScore,
 			Field:  awayField,
 			Result: awayResult,
 		})
-		// TODO insert games and teams into db
+		teams = append(teams, shared.Team{
+			Id:          homeTeamId,
+			DisplayName: homeString,
+		})
+		teams = append(teams, shared.Team{
+			Id:          awayTeamId,
+			DisplayName: awayString,
+		})
+	}
+	for _, team := range teams {
+		shared.InsertTeam(db, team)
+	}
+	for _, game := range games {
+		shared.InsertGame(db, game)
+	}
+	for _, gameTeam := range gameTeams {
+		shared.InsertGameTeam(db, gameTeam)
 	}
 }
 
@@ -144,7 +161,7 @@ func matchTeamStringToId(db *sqlx.DB, input string) (int64, string) {
 	// match these to existing teams if possible
 	// if no match, create a new team ID
 	// skip teams with (non-IA) in the input string
-	corrections := map[string]int{
+	corrections := map[string]int64{
 		"Nevada-LasVegas":           2439,
 		"TexasChristian":            2628,
 		"BrighamYoung":              252,
@@ -170,7 +187,6 @@ func matchTeamStringToId(db *sqlx.DB, input string) (int64, string) {
 		"LouisianaState":            99,
 		"FullertonState":            0,
 		"LongBeachState":            0,
-		"TexasAM":                   245,
 		"WichitaState":              0,
 		"GeorgiaPre-Flight":         0,
 		"Sewanee":                   0,
@@ -297,11 +313,11 @@ func matchTeamStringToId(db *sqlx.DB, input string) (int64, string) {
 	if corrections[input] == 0 {
 		return generateTeamId(input), input
 	}
-	if corrections[input] > 0 {
-		return corrections[input], input
-	}
 	if strings.Contains(input, "(non-IA)") {
 		return generateTeamId(input), input
+	}
+	if corrections[input] > 0 {
+		return corrections[input], input
 	}
 	row := db.QueryRow("SELECT id, displayname from team ORDER BY similarity(displayname, $1) desc", input)
 	var team int64

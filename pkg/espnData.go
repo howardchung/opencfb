@@ -14,6 +14,25 @@ import (
 func main() {
 	db := shared.InitDatabase()
 
+	/*
+		var conferences shared.Conferences
+		// TODO get conferences
+		// Team conference affiliation (insert into conference table)
+		// http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
+		confData, err := http.Get("http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full")
+		if err != nil {
+			panic(err.Error())
+		}
+		confBody, err := ioutil.ReadAll(confData.Body)
+		if err != nil {
+			panic(err.Error())
+		}
+		err = json.Unmarshal([]byte(body), &conferences)
+		for _, conference := range conferences {
+
+		}
+	*/
+
 	year, _, _ := time.Now().Date()
 
 	// Start at 2001 (ESPN has data this far)
@@ -51,11 +70,7 @@ func main() {
 					Date:       date,
 				}
 				if game.State == "STATUS_FINAL" {
-					_, err := db.Exec(`INSERT INTO game VALUES ($1, $2, $3, $4) ON CONFLICT(id) DO NOTHING`,
-						game.Id, game.Attendance, game.State, game.Date)
-					if err != nil {
-						log.Fatal(err)
-					}
+					shared.InsertGame(db, game)
 					homeResult := "T"
 					awayResult := "T"
 					if homeScore > awayScore {
@@ -82,11 +97,7 @@ func main() {
 						Result: awayResult,
 					})
 					for _, gameTeam := range gameTeams {
-						_, err := db.Exec(`INSERT INTO gameteam VALUES ($1, $2, $3, $4, $5) ON CONFLICT(gameid, teamid) DO NOTHING`,
-							gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result)
-						if err != nil {
-							log.Fatal(err)
-						}
+						shared.InsertGameTeam(db, gameTeam)
 					}
 				}
 
@@ -95,6 +106,10 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
+					conferenceId, err := strconv.ParseInt(competitor.Team.ConferenceId, 10, 64)
+					if err != nil {
+						log.Println(err, competitor.Team.DisplayName)
+					}
 					team := shared.Team{
 						Id:             id,
 						DisplayName:    competitor.Team.DisplayName,
@@ -102,14 +117,9 @@ func main() {
 						Color:          competitor.Team.Color,
 						AlternateColor: competitor.Team.AlternateColor,
 						Logo:           competitor.Team.Logo,
-						ConferenceId:   strconv.ParseInt(competitor.Team.ConferenceId, 10, 64),
+						ConferenceId:   conferenceId,
 					}
-					_, err = db.Exec(`INSERT INTO team VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT(id) DO NOTHING`,
-						team.Id, team.DisplayName, team.Abbreviation, team.Color, team.AlternateColor, team.Logo)
-					if err != nil {
-						log.Fatal(err)
-					}
-
+					shared.InsertTeam(db, team)
 				}
 			}
 		}
@@ -143,8 +153,6 @@ func getScoreboard(url string) shared.Scoreboard {
 	return scoreboard
 }
 
-// Team conference affiliation
-// http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
 // Team details
 // http://cdn.espn.com/core/college-football/team/_/id/2116/ucf-knights?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
 // List of teams

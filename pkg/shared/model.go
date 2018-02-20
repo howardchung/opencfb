@@ -36,6 +36,7 @@ type Scoreboard struct {
 					Color          string
 					AlternateColor string
 					Logo           string
+					ConferenceId   string
 				}
 			}
 		} `json:"competitions"`
