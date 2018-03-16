@@ -2,6 +2,24 @@
 
 
 [[projects]]
+  name = "github.com/graphql-go/graphql"
+  packages = [
+    ".",
+    "gqlerrors",
+    "language/ast",
+    "language/kinds",
+    "language/lexer",
+    "language/location",
+    "language/parser",
+    "language/printer",
+    "language/source",
+    "language/typeInfo",
+    "language/visitor"
+  ]
+  revision = "1e23489041ba90a66f317fe0deccb236a2fff3cb"
+  version = "v0.7.5"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmoiron/sqlx"
   packages = [
@@ -31,6 +49,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "899034a72f25a37df821b4b07e6ebc06766afb2bd0e7eb1de3f8e86c68d465b5"
+  inputs-digest = "589638c9fd6e2e302a757d2f61a84cea010945066b7fdd88f1b1b6915bbca74f"
   solver-name = "gps-cdcl"
   solver-version = 1

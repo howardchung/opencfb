@@ -1,4 +1,4 @@
-package main
+package shared
 
 import (
 	// "database/sql"
@@ -14,7 +14,7 @@ import (
 	// _ "github.com/mattn/go-sqlite3"
 )
 
-func main() {
+func JhowellFetcher() {
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/byName.htm")
 	if err != nil {
 		log.Fatal(err)

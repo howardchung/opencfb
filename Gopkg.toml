@@ -31,3 +31,7 @@
 [[constraint]]
   branch = "master"
   name = "golang.org/x/net"
+
+[[constraint]]
+  name = "github.com/graphql-go/graphql"
+  version = "0.7.5"

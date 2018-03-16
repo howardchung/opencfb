@@ -16,7 +16,10 @@ import (
 	"time"
 )
 
-func main() {
+func jhowell() {
+	if _, err := os.Stat("./data/jhowell.csv"); os.IsNotExist(err) {
+		shared.JhowellFetcher()
+	}
 	log.SetOutput(os.Stdout)
 	db := shared.InitDatabase()
 

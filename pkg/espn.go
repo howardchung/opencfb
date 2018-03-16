@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func main() {
+func espn() {
 	db := shared.InitDatabase()
 
 	/*
