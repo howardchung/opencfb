@@ -7,7 +7,7 @@ import (
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "postgres://postgres:postgres@localhost:5433/opencfb?sslmode=disable"
+	connStr := "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
 	db := sqlx.MustConnect("postgres", connStr)
 	db.MustExec("CREATE EXTENSION IF NOT EXISTS fuzzystrmatch")
 	db.MustExec("CREATE EXTENSION IF NOT EXISTS pg_trgm")
