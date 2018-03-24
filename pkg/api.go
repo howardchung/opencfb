@@ -1,15 +1,17 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"github.com/graphql-go/graphql"
 	"github.com/jmoiron/sqlx"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"opencfb/pkg/shared"
 	"os"
-	// "strings"
+	"strings"
 	// "time"
 )
 
@@ -64,6 +66,29 @@ var queryType = graphql.NewObject(graphql.ObjectConfig{
 	},
 })
 
+type gzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func makeGzipHandler(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			fn(w, r)
+			return
+		}
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+		gzr := gzipResponseWriter{Writer: gz, ResponseWriter: w}
+		fn(gzr, r)
+	}
+}
+
 func writeData(w http.ResponseWriter, jData []byte) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
@@ -94,7 +119,6 @@ var db *sqlx.DB
 
 func api() {
 	db = shared.InitDatabase()
-	//todo compression
 
 	// Serve a static graphiql
 	fs := http.FileServer(http.Dir("public"))
@@ -105,7 +129,7 @@ func api() {
 	})
 
 	// serve a GraphQL endpoint at `/graphql`
-	http.Handle("/graphql", handler(schema))
+	http.Handle("/graphql", makeGzipHandler(handler(schema)))
 
 	http.HandleFunc("/teams", func(w http.ResponseWriter, r *http.Request) {
 		response := shared.GetTeams(db)
