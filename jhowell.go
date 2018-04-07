@@ -8,7 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
-	"opencfb/pkg/shared"
+	"opencfb/shared"
 	"os"
 	"sort"
 	"strconv"

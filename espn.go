@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"opencfb/pkg/shared"
+	"opencfb/shared"
 	"strconv"
 	"strings"
 	"time"

@@ -9,6 +9,6 @@ ADD Gopkg.toml Gopkg.toml
 # install dependencies
 RUN dep ensure
 # add source code
-ADD pkg pkg
+ADD .
 # run
-CMD ["go", "run", "pkg/api.go"]
+CMD ["go", "run", "main.go"]

@@ -4,10 +4,14 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"log"
+	"os"
 )
 
 func InitDatabase() *sqlx.DB {
 	connStr := "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
+	if os.Getenv("POSTGRES_CONNECTION_STRING") != "" {
+		connStr = os.Getenv("POSTGRES_CONNECTION_STRING")
+	}
 	db := sqlx.MustConnect("postgres", connStr)
 	db.MustExec("CREATE EXTENSION IF NOT EXISTS fuzzystrmatch")
 	db.MustExec("CREATE EXTENSION IF NOT EXISTS pg_trgm")
@@ -48,27 +52,10 @@ func InsertConference(conference Conference) {
 }
 */
 
-func GetTeam(db *sqlx.DB, id int) Team {
-	log.Printf("GetTeam: %d", id)
+func GetTeams(db *sqlx.DB, id int64) []Team {
+	log.Printf("GetTeams: %d", id)
 	var response []Team
-	rows, err := db.Queryx("SELECT * FROM team WHERE id = $1", id)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for rows.Next() {
-		var t Team
-		err = rows.StructScan(&t)
-		response = append(response, t)
-	}
-	if len(response) < 1 {
-		return Team{}
-	}
-	return response[0]
-}
-
-func GetTeams(db *sqlx.DB) []Team {
-	var response []Team
-	rows, err := db.Queryx("SELECT * FROM team")
+	rows, err := db.Queryx("SELECT * FROM team WHERE (0 = $1 OR id = $1) ORDER BY id desc", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,12 +67,23 @@ func GetTeams(db *sqlx.DB) []Team {
 	return response
 }
 
-func GetGamesForTeam() {
-
+func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
+	log.Printf("GetGames: %d", teamId)
+	var response []Game
+	rows, err := db.Queryx("SELECT * FROM game JOIN gameteam ON gameteam.gameid = game.id WHERE (0 = $1 OR teamid = $1) ORDER BY date desc LIMIT 100", teamId)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for rows.Next() {
+		var g Game
+		err = rows.StructScan(&g)
+		response = append(response, g)
+	}
+	return response
 }
 
-func GetRivalries() {
-
+func GetRivalries(db *sqlx.DB, teamId int64, teamId2 int64) []Team {
+	return nil
 }
 
 func GetAllTimeRankings(db *sqlx.DB) []Team {
@@ -142,10 +140,6 @@ func GetAllTimeRankings(db *sqlx.DB) []Team {
 	}
 	// sort.Sort(ByRating(teams))
 	return teams
-}
-
-func GetOpponentsForTeam() {
-
 }
 
 func GetCurrentWinStreaks() {
