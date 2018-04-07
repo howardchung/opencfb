@@ -7,10 +7,9 @@ Quickstart
 * Install Docker: `curl -sSL https://get.docker.com/ | sh`
 * Install Dep: `curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh`
 * Install dependencies via Dep: `$GOPATH/bin/dep ensure`
-* Set up the database with Docker: `bash scripts/init.sh`
-* Fetch data from jhowell and save to CSV file, import data from CSV file and inserts into DB: `SVC=jhowell go run pkg/*.go`
-* Fetches data from ESPN and inserts into DB: `SVC=espn go run pkg/*.go`
-* Starts the API on the `PORT` environment variable: `SVC=api go run pkg/*.go`
+* Fetch data from jhowell and save to CSV file, import data from CSV file and inserts into DB: `SVC=jhowell go run *.go`
+* Fetches data from ESPN and inserts into DB: `SVC=espn go run *.go`
+* Starts the API on the `PORT` environment variable: `SVC=api go run *.go`
   * For live reloading of the webserver:
     * Install modd: `go get github.com/cortesi/modd/cmd/modd`
     * Run the API: `modd`

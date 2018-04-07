@@ -2,28 +2,24 @@ package shared
 
 import (
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
-	"os"
+	"io/ioutil"
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable"
-	if os.Getenv("POSTGRES_CONNECTION_STRING") != "" {
-		connStr = os.Getenv("POSTGRES_CONNECTION_STRING")
+	connStr := "./data/opencfb.sqlite"
+	db := sqlx.MustConnect("sqlite3", connStr)
+	schema, err := ioutil.ReadFile("./schema.sql")
+	if err != nil {
+		log.Fatal(err)
 	}
-	db := sqlx.MustConnect("postgres", connStr)
-	db.MustExec("CREATE EXTENSION IF NOT EXISTS fuzzystrmatch")
-	db.MustExec("CREATE EXTENSION IF NOT EXISTS pg_trgm")
-	db.MustExec("CREATE TABLE IF NOT EXISTS game (id bigint PRIMARY KEY, attendance bigint, state text, date timestamp with time zone)")
-	db.MustExec("CREATE TABLE IF NOT EXISTS gameteam(gameid bigint REFERENCES game(id), teamid bigint, score bigint, field text, result text, PRIMARY KEY(gameid, teamid))")
-	db.MustExec("CREATE TABLE IF NOT EXISTS team (id bigint PRIMARY KEY, displayName text, abbreviation text, color text, alternateColor text, logo text, conferenceId bigint)")
-	db.MustExec("CREATE TABLE IF NOT EXISTS conference(id bigint PRIMARY KEY, displayName text)")
+	db.MustExec(string(schema))
 	return db
 }
 
 func InsertGame(db *sqlx.DB, game Game) {
-	_, err := db.Exec(`INSERT INTO game VALUES ($1, $2, $3, $4) ON CONFLICT(id) DO NOTHING`,
+	_, err := db.Exec(`INSERT OR REPLACE INTO game VALUES ($1, $2, $3, $4)`,
 		game.Id, game.Attendance, game.State, game.Date)
 	if err != nil {
 		log.Fatal(err)
@@ -31,7 +27,7 @@ func InsertGame(db *sqlx.DB, game Game) {
 }
 
 func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam) {
-	_, err := db.Exec(`INSERT INTO gameteam VALUES ($1, $2, $3, $4, $5) ON CONFLICT(gameid, teamid) DO NOTHING`,
+	_, err := db.Exec(`INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5)`,
 		gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result)
 	if err != nil {
 		log.Fatal(err)
@@ -39,7 +35,7 @@ func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam) {
 }
 
 func InsertTeam(db *sqlx.DB, team Team) {
-	_, err := db.Exec(`INSERT INTO team VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT(id) DO NOTHING`,
+	_, err := db.Exec(`INSERT OR REPLACE INTO team VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		team.Id, team.DisplayName, team.Abbreviation, team.Color, team.AlternateColor, team.Logo, team.ConferenceId)
 	if err != nil {
 		log.Fatal(err)
