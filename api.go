@@ -13,7 +13,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	// "time"
+	"time"
 )
 
 type RequestOptions struct {
@@ -65,11 +65,56 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-		// TODO score
-		// TODO result
-		// TODO wins
-		// TODO losses
-		// TODO ties
+		"score": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The score of the team.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Score, nil
+				}
+				return nil, nil
+			},
+		},
+		"result": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The result of the team.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Result, nil
+				}
+				return nil, nil
+			},
+		},
+		"wins": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The wins of the team.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Wins, nil
+				}
+				return nil, nil
+			},
+		},
+		"losses": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The lossesof the team.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Losses, nil
+				}
+				return nil, nil
+			},
+		},
+		"ties": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The ties of the team.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Ties, nil
+				}
+				return nil, nil
+			},
+		},
 	},
 })
 
@@ -86,7 +131,26 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-		// TODO date
+		"state": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The state of the game.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if game, ok := p.Source.(shared.Game); ok == true {
+					return game.State, nil
+				}
+				return nil, nil
+			},
+		},
+		"date": &graphql.Field{
+			Type:        graphql.String,
+			Description: "The date of the game.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if game, ok := p.Source.(shared.Game); ok == true {
+					return game.Date.Format(time.RFC3339), nil
+				}
+				return nil, nil
+			},
+		},
 		// TODO teams
 	},
 })
@@ -113,12 +177,14 @@ var queryType = graphql.NewObject(graphql.ObjectConfig{
 		"game": &graphql.Field{
 			Type: graphql.NewList(gameType),
 			Args: graphql.FieldConfigArgument{
-				"id": &graphql.ArgumentConfig{
-					Description: "The ID of the game.",
+				"teamId": &graphql.ArgumentConfig{
+					Description: "The ID of the team.",
 					Type:        graphql.String,
 				},
-				// TODO teamId
-				// TODO season
+				"season": &graphql.ArgumentConfig{
+					Description: "The year of the season.",
+					Type:        graphql.Int,
+				},
 			},
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 				var teamId int64 = 0

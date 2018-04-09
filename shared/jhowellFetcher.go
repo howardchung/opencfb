@@ -14,7 +14,13 @@ import (
 	// _ "github.com/mattn/go-sqlite3"
 )
 
-func JhowellFetcher() {
+func JhowellFetcher(filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	w := bufio.NewWriter(f)
+	defer f.Close()
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/byName.htm")
 	if err != nil {
 		log.Fatal(err)
@@ -67,10 +73,10 @@ func readScores(pageName string) {
 		}
 		// new line
 		if n.Type == html.ElementNode && n.Data == "tr" {
-			fmt.Println("")
+			fmt.Fprint(w, "")
 			s := strings.Split(pageName, ".htm")
 			schoolName := s[0]
-			fmt.Print(schoolName + "," + year + ",")
+			fmt.Fprint(schoolName + "," + year + ",")
 		}
 		if n.Type == html.ElementNode && n.Data == "td" {
 			for _, a := range n.Attr {
@@ -82,11 +88,11 @@ func readScores(pageName string) {
 							if a.Key == "href" {
 								s := strings.Split(a.Val, ".htm")
 								schoolName := s[0]
-								fmt.Print(schoolName + ",")
+								fmt.Fprint(schoolName + ",")
 							}
 						}
 					} else {
-						fmt.Print(string(n.FirstChild.Data) + ",")
+						fmt.Fprint(string(n.FirstChild.Data) + ",")
 					}
 				}
 			}

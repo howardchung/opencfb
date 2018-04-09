@@ -59,6 +59,11 @@ type Team struct {
 	Logo           string
 	Rating         float64
 	ConferenceId   int64
+	Score          int64
+	Wins           int64
+	Losses         int64
+	Ties           int64
+	Result         string
 }
 
 type GameTeam struct {

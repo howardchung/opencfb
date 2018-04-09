@@ -1,21 +1,24 @@
 package shared
 
 import (
+	// "encoding/binary"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"time"
 )
 
 func InitDatabase() *sqlx.DB {
 	// Grab the existing data from the cloud
 	if os.Getenv("GH_ACCESS_TOKEN") != "" {
-		_, err := exec.Command("/bin/bash", "./scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).Output()
+		output, err := exec.Command("./scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Print(string(output))
 	}
 
 	connStr := "./opencfb-data/opencfb.sqlite"
@@ -31,10 +34,11 @@ func InitDatabase() *sqlx.DB {
 func UploadDatabase() {
 	// Upload the existing database to the cloud
 	if os.Getenv("GH_ACCESS_TOKEN") != "" {
-		_, err := exec.Command("/bin/bash", "./scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).Output()
+		output, err := exec.Command("./scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Print(string(output))
 	}
 }
 
@@ -101,16 +105,29 @@ func GetTeams(db *sqlx.DB, id int64) []Team {
 func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 	log.Printf("GetGames: %d", teamId)
 	var response []Game
-	rows, err := db.Queryx("SELECT * FROM game JOIN gameteam ON gameteam.gameid = game.id WHERE (0 = $1 OR teamid = $1) ORDER BY date desc LIMIT 100", teamId)
+	rows, err := db.Queryx("SELECT DISTINCT game.id, game.state, game.date FROM game JOIN gameteam ON gameteam.gameid = game.id WHERE (0 = $1 OR teamid = $1) ORDER BY date desc LIMIT 100", teamId)
 	if err != nil {
 		log.Fatal(err)
 	}
 	for rows.Next() {
-		var g Game
-		err = rows.StructScan(&g)
+		var id int64
+		var state string
+		var date string
+		err = rows.Scan(&id, &state, &date)
 		if err != nil {
 			log.Fatal(err)
 		}
+		parsedDate, err := time.Parse("2006-01-02 15:04:05+00:00", date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		g := Game{
+			Id:    id,
+			State: state,
+			Date:  parsedDate,
+		}
+		// TODO get team info for these games
+
 		response = append(response, g)
 	}
 	return response
