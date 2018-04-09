@@ -19,15 +19,15 @@ import (
 )
 
 func jhowell() {
-	if _, err := os.Stat("./data/jhowell.csv"); os.IsNotExist(err) {
-		shared.JhowellFetcher()
+	if _, err := os.Stat("./jhowell.csv"); os.IsNotExist(err) {
+		shared.JhowellFetcher("./jhowell.csv")
 	}
 	log.SetOutput(os.Stdout)
 	db := shared.InitDatabase()
 	var postgresDb *sqlx.DB
 	// postgresDb := sqlx.MustConnect("postgres", "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable")
 
-	file, _ := os.Open("./data/jhowell.csv")
+	file, _ := os.Open("./jhowell.csv")
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)

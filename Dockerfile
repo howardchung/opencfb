@@ -1,4 +1,5 @@
 FROM golang:1.10-stretch
+RUN apt-get install git
 # install dep
 RUN go get github.com/golang/dep
 # create a working directory
