@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	// "io/ioutil"
+	"bufio"
 	"log"
 	"net/http"
-	// "os"
+	"os"
 	"strings"
 	// "time"
 	// _ "github.com/mattn/go-sqlite3"
 )
 
 func JhowellFetcher(filename string) {
-	f, err := os.Create(filename)
+	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
-	w := bufio.NewWriter(f)
-	defer f.Close()
+	w := bufio.NewWriter(file)
+	defer file.Close()
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/byName.htm")
 	if err != nil {
 		log.Fatal(err)
@@ -35,7 +36,7 @@ func JhowellFetcher(filename string) {
 		if n.Type == html.ElementNode && n.Data == "a" && n.Parent.Data == "p" {
 			for _, a := range n.Attr {
 				if a.Key == "href" && a.Val != "ScoresIndex.htm" {
-					readScores(a.Val)
+					readScores(w, a.Val)
 					break
 				}
 			}
@@ -47,7 +48,7 @@ func JhowellFetcher(filename string) {
 	f(doc)
 }
 
-func readScores(pageName string) {
+func readScores(w *bufio.Writer, pageName string) {
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/" + pageName)
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +77,7 @@ func readScores(pageName string) {
 			fmt.Fprint(w, "")
 			s := strings.Split(pageName, ".htm")
 			schoolName := s[0]
-			fmt.Fprint(schoolName + "," + year + ",")
+			fmt.Fprint(w, schoolName+","+year+",")
 		}
 		if n.Type == html.ElementNode && n.Data == "td" {
 			for _, a := range n.Attr {
@@ -88,11 +89,11 @@ func readScores(pageName string) {
 							if a.Key == "href" {
 								s := strings.Split(a.Val, ".htm")
 								schoolName := s[0]
-								fmt.Fprint(schoolName + ",")
+								fmt.Fprint(w, schoolName+",")
 							}
 						}
 					} else {
-						fmt.Fprint(string(n.FirstChild.Data) + ",")
+						fmt.Fprint(w, string(n.FirstChild.Data)+",")
 					}
 				}
 			}
