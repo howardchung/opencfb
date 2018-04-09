@@ -32,97 +32,103 @@ func espn() {
 
 		}
 	*/
-
-	year, _, _ := time.Now().Date()
-
 	// Start at 2001 (ESPN has data this far)
-	for i := 2001; i <= year; i++ {
-		seasonType := 2
-		week := 1
-		// Do every week in the calendar, ingest games/teams
-		url := generateApiUrl(strconv.Itoa(i), strconv.Itoa(seasonType), strconv.Itoa(week))
-		scoreboard := getScoreboard(url)
-		// Build queue of API calls
-		var queue []string
-		for _, season := range scoreboard.Leagues[0].Calendar {
-			for _, week := range season.Entries {
-				queue = append(queue, generateApiUrl(strconv.Itoa(i), season.Value, week.Value))
-			}
-		}
-		// loop over queue and make those API calls
-		for _, apiCall := range queue {
-			log.Println(apiCall)
-			scoreboard := getScoreboard(apiCall)
-			for _, event := range scoreboard.Events {
-				id, _ := strconv.ParseInt(event.Id, 10, 64)
-				homeTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Id, 10, 64)
-				awayTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Id, 10, 64)
-				homeScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Score, 10, 64)
-				awayScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Score, 10, 64)
-				date, err := time.Parse("2006-01-02T15:04Z", event.Date)
-				if err != nil {
-					log.Fatal(err)
-				}
-				game := shared.Game{
-					Id:         id,
-					Attendance: event.Competitions[0].Attendance,
-					State:      event.Status.Type.Name,
-					Date:       date,
-				}
-				if game.State == "STATUS_FINAL" {
-					shared.InsertGame(db, game)
-					homeResult := "T"
-					awayResult := "T"
-					if homeScore > awayScore {
-						homeResult = "W"
-						awayResult = "L"
-					}
-					if awayScore > homeScore {
-						homeResult = "L"
-						awayResult = "W"
-					}
-					var gameTeams []shared.GameTeam
-					gameTeams = append(gameTeams, shared.GameTeam{
-						GameId: id,
-						TeamId: homeTeam,
-						Score:  homeScore,
-						Field:  event.Competitions[0].Competitors[0].HomeAway,
-						Result: homeResult,
-					})
-					gameTeams = append(gameTeams, shared.GameTeam{
-						GameId: id,
-						TeamId: awayTeam,
-						Score:  awayScore,
-						Field:  event.Competitions[0].Competitors[1].HomeAway,
-						Result: awayResult,
-					})
-					for _, gameTeam := range gameTeams {
-						shared.InsertGameTeam(db, gameTeam)
-					}
-				}
+	startAt := 2001
+	for {
+		year, _, _ := time.Now().Date()
 
-				for _, competitor := range event.Competitions[0].Competitors {
-					id, err := strconv.ParseInt(competitor.Id, 10, 64)
+		for i := startAt; i <= year; i++ {
+			seasonType := 2
+			week := 1
+			// Do every week in the calendar, ingest games/teams
+			url := generateApiUrl(strconv.Itoa(i), strconv.Itoa(seasonType), strconv.Itoa(week))
+			scoreboard := getScoreboard(url)
+			// Build queue of API calls
+			var queue []string
+			for _, season := range scoreboard.Leagues[0].Calendar {
+				for _, week := range season.Entries {
+					queue = append(queue, generateApiUrl(strconv.Itoa(i), season.Value, week.Value))
+				}
+			}
+			// loop over queue and make those API calls
+			for _, apiCall := range queue {
+				log.Println(apiCall)
+				scoreboard := getScoreboard(apiCall)
+				for _, event := range scoreboard.Events {
+					id, _ := strconv.ParseInt(event.Id, 10, 64)
+					homeTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Id, 10, 64)
+					awayTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Id, 10, 64)
+					homeScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Score, 10, 64)
+					awayScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Score, 10, 64)
+					date, err := time.Parse("2006-01-02T15:04Z", event.Date)
 					if err != nil {
 						log.Fatal(err)
 					}
-					conferenceId, err := strconv.ParseInt(competitor.Team.ConferenceId, 10, 64)
-					if err != nil {
-						log.Println(err, competitor.Team.DisplayName)
+					game := shared.Game{
+						Id:         id,
+						Attendance: event.Competitions[0].Attendance,
+						State:      event.Status.Type.Name,
+						Date:       date,
 					}
-					team := shared.Team{
-						Id:             id,
-						DisplayName:    competitor.Team.DisplayName,
-						Abbreviation:   competitor.Team.Abbreviation,
-						Color:          competitor.Team.Color,
-						AlternateColor: competitor.Team.AlternateColor,
-						Logo:           competitor.Team.Logo,
-						ConferenceId:   conferenceId,
+					if game.State == "STATUS_FINAL" {
+						shared.InsertGame(db, game, true)
+						homeResult := "T"
+						awayResult := "T"
+						if homeScore > awayScore {
+							homeResult = "W"
+							awayResult = "L"
+						}
+						if awayScore > homeScore {
+							homeResult = "L"
+							awayResult = "W"
+						}
+						var gameTeams []shared.GameTeam
+						gameTeams = append(gameTeams, shared.GameTeam{
+							GameId: id,
+							TeamId: homeTeam,
+							Score:  homeScore,
+							Field:  event.Competitions[0].Competitors[0].HomeAway,
+							Result: homeResult,
+						})
+						gameTeams = append(gameTeams, shared.GameTeam{
+							GameId: id,
+							TeamId: awayTeam,
+							Score:  awayScore,
+							Field:  event.Competitions[0].Competitors[1].HomeAway,
+							Result: awayResult,
+						})
+						for _, gameTeam := range gameTeams {
+							shared.InsertGameTeam(db, gameTeam, true)
+						}
 					}
-					shared.InsertTeam(db, team)
+
+					for _, competitor := range event.Competitions[0].Competitors {
+						id, err := strconv.ParseInt(competitor.Id, 10, 64)
+						if err != nil {
+							log.Fatal(err)
+						}
+						conferenceId, err := strconv.ParseInt(competitor.Team.ConferenceId, 10, 64)
+						if err != nil {
+							log.Println(err, competitor.Team.DisplayName)
+						}
+						team := shared.Team{
+							Id:             id,
+							DisplayName:    competitor.Team.DisplayName,
+							Abbreviation:   competitor.Team.Abbreviation,
+							Color:          competitor.Team.Color,
+							AlternateColor: competitor.Team.AlternateColor,
+							Logo:           competitor.Team.Logo,
+							ConferenceId:   conferenceId,
+						}
+						shared.InsertTeam(db, team, true)
+					}
 				}
 			}
 		}
+		shared.UploadDatabase()
+		// Start at the current year on subsequent runs
+		startAt = year
+		time.Sleep(30 * time.Minute)
 	}
 }
 

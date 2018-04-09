@@ -3,12 +3,22 @@ package shared
 import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "./data/opencfb.sqlite"
+	// Grab the existing data from the cloud
+	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+		_, err := exec.Command("/bin/bash", "./scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	connStr := "./opencfb-data/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	schema, err := ioutil.ReadFile("./schema.sql")
 	if err != nil {
@@ -18,24 +28,46 @@ func InitDatabase() *sqlx.DB {
 	return db
 }
 
-func InsertGame(db *sqlx.DB, game Game) {
-	_, err := db.Exec(`INSERT OR REPLACE INTO game VALUES ($1, $2, $3, $4)`,
+func UploadDatabase() {
+	// Upload the existing database to the cloud
+	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+		_, err := exec.Command("/bin/bash", "./scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func InsertGame(db *sqlx.DB, game Game, replace bool) {
+	query := `INSERT OR IGNORE INTO game VALUES ($1, $2, $3, $4)`
+	if replace {
+		query = `INSERT OR REPLACE INTO game VALUES ($1, $2, $3, $4)`
+	}
+	_, err := db.Exec(query,
 		game.Id, game.Attendance, game.State, game.Date)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam) {
-	_, err := db.Exec(`INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5)`,
+func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam, replace bool) {
+	query := `INSERT OR IGNORE INTO gameteam VALUES ($1, $2, $3, $4, $5)`
+	if replace {
+		query = `INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5)`
+	}
+	_, err := db.Exec(query,
 		gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func InsertTeam(db *sqlx.DB, team Team) {
-	_, err := db.Exec(`INSERT OR REPLACE INTO team VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+func InsertTeam(db *sqlx.DB, team Team, replace bool) {
+	query := `INSERT OR IGNORE INTO team VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	if replace {
+		query = `INSERT OR REPLACE INTO team VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	}
+	_, err := db.Exec(query,
 		team.Id, team.DisplayName, team.Abbreviation, team.Color, team.AlternateColor, team.Logo, team.ConferenceId)
 	if err != nil {
 		log.Fatal(err)
@@ -58,6 +90,9 @@ func GetTeams(db *sqlx.DB, id int64) []Team {
 	for rows.Next() {
 		var t Team
 		err = rows.StructScan(&t)
+		if err != nil {
+			log.Fatal(err)
+		}
 		response = append(response, t)
 	}
 	return response
@@ -73,6 +108,9 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 	for rows.Next() {
 		var g Game
 		err = rows.StructScan(&g)
+		if err != nil {
+			log.Fatal(err)
+		}
 		response = append(response, g)
 	}
 	return response

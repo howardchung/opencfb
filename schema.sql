@@ -14,13 +14,13 @@ PRIMARY KEY(gameid, teamid));
 
 CREATE TABLE IF NOT EXISTS team (
 id bigint PRIMARY KEY, 
-displayName text, 
+displayname text, 
 abbreviation text, 
 color text, 
-alternateColor text, 
+alternatecolor text, 
 logo text, 
-conferenceId bigint);
+conferenceid bigint);
 
 CREATE TABLE IF NOT EXISTS conference(
 id bigint PRIMARY KEY, 
-displayName text);
+displayname text);

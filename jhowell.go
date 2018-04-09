@@ -5,8 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	// "fmt"
+	"encoding/json"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	// _ "github.com/lib/pq"
+	"io/ioutil"
 	"log"
 	"opencfb/shared"
 	"os"
@@ -22,6 +24,8 @@ func jhowell() {
 	}
 	log.SetOutput(os.Stdout)
 	db := shared.InitDatabase()
+	var postgresDb *sqlx.DB
+	// postgresDb := sqlx.MustConnect("postgres", "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable")
 
 	file, _ := os.Open("./data/jhowell.csv")
 	defer file.Close()
@@ -31,8 +35,17 @@ func jhowell() {
 	var games []shared.Game
 	var gameTeams []shared.GameTeam
 	var teams []shared.Team
-	var nameMap map[string]bool
-	nameMap = make(map[string]bool)
+	var nameMap map[string]int64
+	if _, err := os.Stat("./jhowellMappings.json"); err == nil {
+		// Read the saved map
+		b, err := ioutil.ReadFile("./jhowellMappings.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+		json.Unmarshal(b, &nameMap)
+	} else {
+		nameMap = make(map[string]int64)
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -64,19 +77,8 @@ func jhowell() {
 		}
 		isNeutralSite := strings.HasPrefix(s[8], "@")
 
-		homeTeamId, homeDisplayName := matchTeamStringToId(db, homeString)
-		if !nameMap[homeString] {
-			log.Println(homeTeamId, homeString, homeDisplayName)
-			nameMap[homeString] = true
-		}
-
-		awayTeamId, awayDisplayName := matchTeamStringToId(db, awayString)
-		if !nameMap[awayString] {
-			log.Println(awayTeamId, awayString, awayDisplayName)
-			nameMap[awayString] = true
-		}
-
-		// panic(fmt.Sprintf("stop"))
+		homeTeamId := matchTeamStringToId(postgresDb, homeString, nameMap)
+		awayTeamId := matchTeamStringToId(postgresDb, awayString, nameMap)
 
 		// Create a game ID
 		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
@@ -125,19 +127,30 @@ func jhowell() {
 			DisplayName: awayString,
 		})
 	}
+
+	// Save our map to file
+	jsonString, err := json.MarshalIndent(nameMap, "", "  ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ioutil.WriteFile("./jhowellMappings.json", jsonString, 0644)
+
 	for _, team := range teams {
-		shared.InsertTeam(db, team)
+		log.Println(team)
+		shared.InsertTeam(db, team, false)
 	}
 	for _, game := range games {
-		shared.InsertGame(db, game)
+		log.Println(game)
+		shared.InsertGame(db, game, false)
 	}
 	for _, gameTeam := range gameTeams {
-		shared.InsertGameTeam(db, gameTeam)
+		log.Println(gameTeam)
+		shared.InsertGameTeam(db, gameTeam, false)
 	}
 }
 
 // espn team ids range from 2 to 3200
-// jhowell teams, hash the unique key (name), take the result % (2^32) and add (2^32) (match to espn team by edit distance if possible, otherwise assign id)
+// jhowell teams, hash the unique key (name), take the result % (2^32) and add (2^32) (match to espn team by similarity if possible, otherwise assign id)
 func generateTeamId(name string) int64 {
 	key := name
 	sum := sha256.Sum256([]byte(key))
@@ -160,174 +173,35 @@ func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	return generatedId
 }
 
-func matchTeamStringToId(db *sqlx.DB, input string) (int64, string) {
+func matchTeamStringToId(db *sqlx.DB, input string, nameMap map[string]int64) int64 {
 	// match these to existing teams if possible
 	// if no match, create a new team ID
 	// skip teams with (non-IA) in the input string
-	corrections := map[string]int64{
-		"Nevada-LasVegas":           2439,
-		"TexasChristian":            2628,
-		"BrighamYoung":              252,
-		"Texas-ElPaso":              2638,
-		"Mississippi":               145,
-		"Texas":                     251,
-		"Kent":                      2309, // Kent State?
-		"NorthCarolina":             153,
-		"Miami(Florida)":            2390,
-		"CentralFlorida":            2116,
-		"FloridaInternational":      2229,
-		"NorthCarolinaState":        152,
-		"Pacific":                   0,
-		"Davidson":                  0,
-		"GeorgeWashington":          0,
-		"Denver":                    0,
-		"Alabama":                   333,
-		"SouthernCalifornia":        30,
-		"TexasAM":                   245,
-		"DetroitMercy":              0,
-		"Louisiana-Lafayette":       0,
-		"MiddleTennesseeState":      0,
-		"LouisianaState":            99,
-		"FullertonState":            0,
-		"LongBeachState":            0,
-		"WichitaState":              0,
-		"GeorgiaPre-Flight":         0,
-		"Sewanee":                   0,
-		"Loyola(NewOrleans)":        0,
-		"StMarys":                   0,
-		"MississippiCollege":        0,
-		"Centre":                    0,
-		"Oglethorpe":                0,
-		"Pennsylvania":              0,
-		"SpringHill":                0,
-		"Birmingham-Southern":       0,
-		"Carlisle":                  0,
-		"WashingtonLee":             0,
-		"Haskell":                   0,
-		"Maryville":                 0,
-		"Nashville":                 0,
-		"Cumberland":                0,
-		"Alabama-Birmingham":        0,
-		"AlamedaCoastGuard":         0,
-		"MarchField":                0,
-		"StMarysPre-Flight":         0,
-		"DelMontePre-Flight":        0,
-		"SanFrancisco":              0,
-		"Southern":                  0,
-		"AmarilloField":             0,
-		"LubbockField":              0,
-		"WestTexasAM":               0,
-		"NormanNAS":                 0,
-		"SecondAirForce(Colorado)":  0,
-		"RandolphField":             0,
-		"Amherst":                   0,
-		"Dartmouth":                 0,
-		"Columbia":                  0,
-		"Vermont":                   0,
-		"Brown":                     0,
-		"Colby":                     0,
-		"Harvard":                   0,
-		"WorcesterTech":             0,
-		"Springfield":               0,
-		"Stevens":                   0,
-		"Cornell":                   0,
-		"MIT":                       0,
-		"Tufts":                     0,
-		"VirginiaMilitaryInstitute": 0,
-		"EastTennesseeState":        0,
-		"Hardin-Simmons":            0,
-		"Marquette":                 0,
-		"Drake":                     0,
-		"SantaClara":                0,
-		"Centenary":                 0,
-		"LoyolaMarymount":           0,
-		"Portland":                  0,
-		"Gonzaga":                   0,
-		"Chicago":                   0,
-		"Phillips":                  0,
-		"Southwestern(Texas)":       0,
-		"Washington(Missouri)":      0,
-		"StLouis":                   0,
-		"Drury":                     0,
-		"Texas-Arlington":           0,
-		"Princeton":                 0,
-		"BostonUniversity":          0,
-		"CoastGuard":                0,
-		"ColoradoCollege":           0,
-		"Georgetown":                0,
-		"WashingtonJefferson":       0,
-		"Williams":                  0,
-		"Dickinson":                 0,
-		"Union(NewYork)":            0,
-		"Trinity(Connecticut)":      0,
-		"Wesleyan":                  0,
-		"Manhattan":                 0,
-		"FortBenning":               0,
-		"Dayton":                    0,
-		"Bates":                     0,
-		"Beloit":                    0,
-		"Lawrence":                  0,
-		"Knox":                      0,
-		"LakeForest":                0,
-		"Millsaps":                  0,
-		"MerchantMarine":            0,
-		"NewYorkUniversity":         0,
-		"NorthCarolinaPre-Flight":   0,
-		"Bowdoin":                   0,
-		"Tampa":                     0,
-		"Xavier":                    0,
-		"Bradley":                   0,
-		"WesternState":              0,
-		"Regis":                     0,
-		"ColoradoMines":             0,
-		"Swarthmore":                0,
-		"FranklinMarshall":          0,
-		"Haverford":                 0,
-		"Butler":                    0,
-		"MareIslandMarines":         0,
-		"CampGrant":                 0,
-		"FortRiley":                 0,
-		"GreatLakesNavy":            0,
-		"IowaPre-Flight":            0,
-		"WestVirginiaWesleyan":      0,
-		"CarnegieTech":              0,
-		"Creighton":                 0,
-		"Rhodes":                    0,
-		"Wabash":                    0,
-		"Lombard":                   0,
-		"Cornell(Iowa)":             0,
-		"Erskine":                   0,
-		"Newberry":                  0,
-		"Coe":                       0,
-		"Hamilton":                  0,
-		"FortWarren":                0,
-		"Washburn":                  0,
-		"Grinnell":                  0,
-		"Hampden-Sydney":            0,
-		"QuanticoMarines":           0,
-		"Simpson":                   0,
-		"FloridaAM":                 0,
-		"LosAngelesState":           0,
-		"SantaBarbara":              0,
-		"TennesseeMedical":          0,
-		"Whitman":                   0,
+	// 0 means the default similarity match is incorrect, assign a new generated ID
+	if val, ok := nameMap[input]; ok && val == 0 {
+		// Generate an ID
+		genId := generateTeamId(input)
+		return genId
 	}
-	// some teams need to be manually corrected
-	if corrections[input] == 0 {
-		return generateTeamId(input), input
+	if val, ok := nameMap[input]; ok && val > 0 {
+		// Use the saved value
+		return val
 	}
 	if strings.Contains(input, "(non-IA)") {
-		return generateTeamId(input), input
+		// Generate an ID
+		return generateTeamId(input)
 	}
-	if corrections[input] > 0 {
-		return corrections[input], input
+	if db != nil {
+		row := db.QueryRow("SELECT id, displayname from team WHERE id < 2000000000 ORDER BY similarity(displayname, $1) desc limit 1", input)
+		var team int64
+		var displayName string
+		err := row.Scan(&team, &displayName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		nameMap[input] = team
+		log.Println(input, team, displayName)
+		return team
 	}
-	row := db.QueryRow("SELECT id, displayname from team ORDER BY similarity(displayname, $1) desc", input)
-	var team int64
-	var displayName string
-	err := row.Scan(&team, &displayName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return team, displayName
+	return generateTeamId(input)
 }

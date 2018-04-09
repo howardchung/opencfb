@@ -11,4 +11,4 @@ RUN dep ensure
 # add source code
 ADD .
 # run
-CMD ["go", "run", "main.go"]
+CMD ["go", "run", "*.go"]
