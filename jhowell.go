@@ -7,7 +7,6 @@ import (
 	// "fmt"
 	"encoding/json"
 	"github.com/jmoiron/sqlx"
-	// _ "github.com/lib/pq"
 	"io/ioutil"
 	"log"
 	"opencfb/shared"
