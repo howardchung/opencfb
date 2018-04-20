@@ -3,7 +3,7 @@ opencfb
 
 Quickstart
 ====
-* Install Go: `curl https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar -C /opt -xz && export PATH=$PATH:/opt/go/bin`
+* Install Go: `curl https://dl.google.com/go/go1.10.linux-amd64.tar.gz | tar -C /opt -xz && export GOPATH=$HOME && export PATH=$PATH:/opt/go/bin`
 * Install Dep: `curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh`
 * Install dependencies via Dep: `$GOPATH/bin/dep ensure`
 * Fetch data from ESPN and insert into DB: `SVC=espn go run *.go`
