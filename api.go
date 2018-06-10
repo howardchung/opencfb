@@ -65,6 +65,16 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
+		"field": &graphql.Field{
+			Type:        graphql.String,
+			Description: "Whether the team was home/away/neutral",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if team, ok := p.Source.(shared.Team); ok == true {
+					return team.Field, nil
+				}
+				return nil, nil
+			},
+		},
 		"score": &graphql.Field{
 			Type:        graphql.String,
 			Description: "The score of the team.",
@@ -151,7 +161,16 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 				return nil, nil
 			},
 		},
-		// TODO teams
+		"teams": &graphql.Field{
+			Type:        graphql.NewList(teamType),
+			Description: "The teams in this game.",
+			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+				if game, ok := p.Source.(shared.Game); ok == true {
+					return game.Teams, nil
+				}
+				return nil, nil
+			},
+		},
 	},
 })
 

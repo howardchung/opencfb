@@ -1,4 +1,4 @@
 #!/bin/bash
-git clone --depth 1 https://$1@github.com/howardchung/opencfb-data.git
+git clone --depth 1 $1
 cd opencfb-data
 git pull

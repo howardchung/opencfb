@@ -48,6 +48,7 @@ type Game struct {
 	Attendance int64
 	State      string
 	Date       time.Time
+	Teams      []Team
 }
 
 type Team struct {
@@ -59,6 +60,7 @@ type Team struct {
 	Logo           string
 	Rating         float64
 	ConferenceId   int64
+	Field          string
 	Score          int64
 	Wins           int64
 	Losses         int64

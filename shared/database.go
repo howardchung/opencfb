@@ -13,7 +13,7 @@ import (
 
 func InitDatabase() *sqlx.DB {
 	// Grab the existing data from the cloud
-	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+	if os.Getenv("GIT_DATA_REPO") != "" {
 		output, err := exec.Command("./scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
@@ -33,7 +33,7 @@ func InitDatabase() *sqlx.DB {
 
 func UploadDatabase() {
 	// Upload the existing database to the cloud
-	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+	if os.Getenv("GIT_DATA_REPO_ACCESS_TOKEN") != "" {
 		output, err := exec.Command("./scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
@@ -109,6 +109,30 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 	if err != nil {
 		log.Fatal(err)
 	}
+	gameTeams, err := db.Queryx("SELECT * from gameteam ORDER BY gameid")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var gameTeamObjs []GameTeam
+	for gameTeams.Next() {
+		var gameId int64
+		var teamId int64
+		var score int64
+		var field string
+		var result string
+		err = gameTeams.Scan(&gameId, &teamId, &score, &field, &result)
+		if err != nil {
+			log.Fatal(err)
+		}
+		gt := GameTeam{
+			GameId: gameId,
+			TeamId: teamId,
+			Field:  field,
+			Score:  score,
+			Result: result,
+		}
+		gameTeamObjs = append(gameTeamObjs, gt)
+	}
 	for rows.Next() {
 		var id int64
 		var state string
@@ -121,12 +145,24 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 		if err != nil {
 			log.Fatal(err)
 		}
+		var singleGameTeams []Team
+		for _, gt := range gameTeamObjs {
+			if gt.GameId == id {
+				singleGameTeams = append(singleGameTeams, Team{
+					Id:     gt.TeamId,
+					Field:  gt.Field,
+					Score:  gt.Score,
+					Result: gt.Result,
+				})
+			}
+		}
 		g := Game{
 			Id:    id,
 			State: state,
 			Date:  parsedDate,
+			Teams: singleGameTeams,
 		}
-		// TODO get team info for these games
+		// log.Println(g)
 
 		response = append(response, g)
 	}
