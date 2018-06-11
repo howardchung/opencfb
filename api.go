@@ -248,14 +248,13 @@ func makeGzipHandler(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func writeData(w http.ResponseWriter, jData []byte) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jData)
-}
-
 func handler(schema graphql.Schema) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// log.Println(r)
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Content-Type", "application/json")
 		var opts RequestOptions
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -268,7 +267,6 @@ func handler(schema graphql.Schema) http.HandlerFunc {
 			VariableValues: opts.Variables,
 			OperationName:  opts.OperationName,
 		})
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(result)
 	}
