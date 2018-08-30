@@ -1,5 +1,5 @@
 FROM golang:1.10 AS builder
-RUN apt-get install git
+RUN apt-get install git gcc
 
 # Download and install the latest release of dep
 ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
