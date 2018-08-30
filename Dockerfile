@@ -10,6 +10,6 @@ ADD Gopkg.toml Gopkg.toml
 # install dependencies
 RUN dep ensure
 # add source code
-ADD .
+ADD . .
 # run
 CMD ["go", "run", "*.go"]
