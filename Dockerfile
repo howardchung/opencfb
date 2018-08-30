@@ -1,7 +1,8 @@
 FROM golang:1.10-stretch
 RUN apt-get install git
-# install dep
-RUN go get github.com/golang/dep
+# Download and install the latest release of dep
+ADD https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 /usr/bin/dep
+RUN chmod +x /usr/bin/dep
 # create a working directory
 WORKDIR /go/src/app
 # add lockfiles
