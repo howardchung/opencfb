@@ -12,6 +12,4 @@ RUN dep ensure --vendor-only
 COPY . ./
 RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix nocgo -o /app .
 
-FROM scratch
-COPY --from=builder /app ./
 ENTRYPOINT ["./app"]
