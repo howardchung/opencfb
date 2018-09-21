@@ -1,15 +1,16 @@
-FROM golang:1.10 AS builder
-RUN apt-get install git
+FROM golang:1.11 AS builder
 
-# Download and install the latest release of dep
-ADD https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 /usr/bin/dep
-RUN chmod +x /usr/bin/dep
+WORKDIR .
+RUN go build
 
-# Copy the code from the host and compile it
-WORKDIR $GOPATH/src/opencfb
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure --vendor-only
-COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /app .
+CMD ["./opencfb"]
 
-ENTRYPOINT ["./app"]
+# FROM golang:alpine as builder
+# RUN mkdir /build 
+# ADD . /build/
+# WORKDIR /build 
+# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o main .
+# FROM scratch
+# COPY --from=builder /build/main /app/
+# WORKDIR /app
+# CMD ["./main"]
