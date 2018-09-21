@@ -13,8 +13,9 @@ Quickstart
 * Start the API on the `PORT` environment variable: `SVC=api go run *.go`
 * The API serves a [GraphQL](https://github.com/graphql) server, you can run queries against it using the graphiql interface at `/`
 * For live reloading of the web server:
-  * `curl -sSL https://github.com/cortesi/modd/releases/download/v0.7/modd-0.7-linux64.tgz | tar zxv --strip-components 1`
-  * `./modd`
+  * `curl -sSL https://github.com/cortesi/modd/releases/download/v0.7/modd-0.7-linux64.tgz | sudo tar zxv --strip-components 1 -C /usr/local/bin`
+  * `modd`
+* This project uses go modules, added in Go 1.11. If the project exists within the GOPATH, it may not work properly. Changing the GOPATH can resolve this: `export GOPATH=/home/ubuntu`
 * Configure the application with a `.env` file in the root of the repo
 
 Building a Docker container
