@@ -4,4 +4,5 @@ vendor
 matchedTeams.txt
 .env
 main
+opencfb
 opencfb-data

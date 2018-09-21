@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"opencfb/shared"
 	"os"
 	"strconv"
 	"strings"
@@ -29,7 +28,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The ID of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return strconv.FormatInt(team.Id, 10), nil
 				}
 				return nil, nil
@@ -39,7 +38,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The display name of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.DisplayName, nil
 				}
 				return nil, nil
@@ -49,7 +48,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The logo URL of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Logo, nil
 				}
 				return nil, nil
@@ -59,7 +58,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The color of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Color, nil
 				}
 				return nil, nil
@@ -69,7 +68,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "Whether the team was home/away/neutral",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Field, nil
 				}
 				return nil, nil
@@ -79,7 +78,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The score of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Score, nil
 				}
 				return nil, nil
@@ -89,7 +88,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The result of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Result, nil
 				}
 				return nil, nil
@@ -99,7 +98,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The wins of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Wins, nil
 				}
 				return nil, nil
@@ -109,7 +108,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The lossesof the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Losses, nil
 				}
 				return nil, nil
@@ -119,7 +118,7 @@ var teamType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The ties of the team.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if team, ok := p.Source.(shared.Team); ok == true {
+				if team, ok := p.Source.(Team); ok == true {
 					return team.Ties, nil
 				}
 				return nil, nil
@@ -135,7 +134,7 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The ID of the game.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if game, ok := p.Source.(shared.Game); ok == true {
+				if game, ok := p.Source.(Game); ok == true {
 					return strconv.FormatInt(game.Id, 10), nil
 				}
 				return nil, nil
@@ -145,7 +144,7 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The state of the game.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if game, ok := p.Source.(shared.Game); ok == true {
+				if game, ok := p.Source.(Game); ok == true {
 					return game.State, nil
 				}
 				return nil, nil
@@ -155,7 +154,7 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.String,
 			Description: "The date of the game.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if game, ok := p.Source.(shared.Game); ok == true {
+				if game, ok := p.Source.(Game); ok == true {
 					return game.Date.Format(time.RFC3339), nil
 				}
 				return nil, nil
@@ -165,7 +164,7 @@ var gameType = graphql.NewObject(graphql.ObjectConfig{
 			Type:        graphql.NewList(teamType),
 			Description: "The teams in this game.",
 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-				if game, ok := p.Source.(shared.Game); ok == true {
+				if game, ok := p.Source.(Game); ok == true {
 					return game.Teams, nil
 				}
 				return nil, nil
@@ -190,7 +189,7 @@ var queryType = graphql.NewObject(graphql.ObjectConfig{
 				if p.Args["id"] != nil {
 					id, _ = strconv.ParseInt(p.Args["id"].(string), 10, 64)
 				}
-				return shared.GetTeams(db, id), nil
+				return GetTeams(db, id), nil
 			},
 		},
 		"game": &graphql.Field{
@@ -214,7 +213,7 @@ var queryType = graphql.NewObject(graphql.ObjectConfig{
 				if p.Args["season"] != nil {
 					season = p.Args["season"].(int)
 				}
-				return shared.GetGames(db, teamId, season), nil
+				return GetGames(db, teamId, season), nil
 			},
 		},
 		// TODO rankings
@@ -275,7 +274,7 @@ func handler(schema graphql.Schema) http.HandlerFunc {
 var db *sqlx.DB
 
 func api() {
-	db = shared.InitDatabase()
+	db = InitDatabase()
 
 	// Serve a static graphiql
 	fs := http.FileServer(http.Dir("public"))

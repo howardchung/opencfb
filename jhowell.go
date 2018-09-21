@@ -9,7 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
-	"opencfb/shared"
 	"os"
 	"sort"
 	"strconv"
@@ -19,10 +18,10 @@ import (
 
 func jhowell() {
 	if _, err := os.Stat("./jhowell.csv"); os.IsNotExist(err) {
-		shared.JhowellFetcher("./jhowell.csv")
+		JhowellFetcher("./jhowell.csv")
 	}
 	log.SetOutput(os.Stdout)
-	db := shared.InitDatabase()
+	db := InitDatabase()
 	var postgresDb *sqlx.DB
 	// postgresDb := sqlx.MustConnect("postgres", "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable")
 
@@ -31,9 +30,9 @@ func jhowell() {
 
 	scanner := bufio.NewScanner(file)
 
-	var games []shared.Game
-	var gameTeams []shared.GameTeam
-	var teams []shared.Team
+	var games []Game
+	var gameTeams []GameTeam
+	var teams []Team
 	var nameMap map[string]int64
 	if _, err := os.Stat("./jhowellMappings.json"); err == nil {
 		// Read the saved map
@@ -82,7 +81,7 @@ func jhowell() {
 		// Create a game ID
 		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
 
-		games = append(games, shared.Game{
+		games = append(games, Game{
 			Id:    generatedId,
 			Date:  gameDate,
 			State: "STATUS_FINAL",
@@ -99,7 +98,7 @@ func jhowell() {
 		if !isNeutralSite {
 			homeField = "home"
 		}
-		gameTeams = append(gameTeams, shared.GameTeam{
+		gameTeams = append(gameTeams, GameTeam{
 			GameId: generatedId,
 			TeamId: homeTeamId,
 			Score:  homeScore,
@@ -110,18 +109,18 @@ func jhowell() {
 		if !isNeutralSite {
 			awayField = "away"
 		}
-		gameTeams = append(gameTeams, shared.GameTeam{
+		gameTeams = append(gameTeams, GameTeam{
 			GameId: generatedId,
 			TeamId: awayTeamId,
 			Score:  awayScore,
 			Field:  awayField,
 			Result: awayResult,
 		})
-		teams = append(teams, shared.Team{
+		teams = append(teams, Team{
 			Id:          homeTeamId,
 			DisplayName: homeString,
 		})
-		teams = append(teams, shared.Team{
+		teams = append(teams, Team{
 			Id:          awayTeamId,
 			DisplayName: awayString,
 		})
@@ -136,15 +135,15 @@ func jhowell() {
 
 	for _, team := range teams {
 		log.Println(team)
-		shared.InsertTeam(db, team, false)
+		InsertTeam(db, team, false)
 	}
 	for _, game := range games {
 		log.Println(game)
-		shared.InsertGame(db, game, false)
+		InsertGame(db, game, false)
 	}
 	for _, gameTeam := range gameTeams {
 		log.Println(gameTeam)
-		shared.InsertGameTeam(db, gameTeam, false)
+		InsertGameTeam(db, gameTeam, false)
 	}
 }
 
