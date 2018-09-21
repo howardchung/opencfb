@@ -15,6 +15,10 @@ Quickstart
     * The API serves a [GraphQL](https://github.com/graphql) server, you can run queries against it using the graphiql interface at `/`
 * Configure the application with a `.env` file in the root of the repo
 
+Building a Docker container
+====
+* `docker build . -t opencfb/opencfb`
+
 Features
 ====
 * circles of parity
