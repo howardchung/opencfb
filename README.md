@@ -3,9 +3,7 @@ opencfb
 
 Quickstart
 ====
-* Install Go: `curl https://dl.google.com/go/go1.10.linux-amd64.tar.gz | sudo tar -C /opt -xz && export GOPATH=$HOME && export PATH=$PATH:/opt/go/bin`
-* Install Dep: `curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh`
-* Install dependencies via Dep: `$GOPATH/bin/dep ensure`
+* Install Go: `curl https://dl.google.com/go/go1.11.linux-amd64.tar.gz | sudo tar -C /opt -xz && export GOPATH=$HOME && export PATH=$PATH:/opt/go/bin`
 * Clone the data from the data repo: `git clone https://github.com/howardchung/opencfb-data`
 * Alternatively, run the ingestion workers yourself:
   * Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams: `SVC=jhowell go run *.go`

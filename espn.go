@@ -5,17 +5,16 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"opencfb/shared"
 	"strconv"
 	"strings"
 	"time"
 )
 
 func espn() {
-	db := shared.InitDatabase()
+	db := InitDatabase()
 
 	/*
-		var conferences shared.Conferences
+		var conferences Conferences
 		// TODO get conferences
 		// Team conference affiliation (insert into conference table)
 		// http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
@@ -64,14 +63,14 @@ func espn() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					game := shared.Game{
+					game := Game{
 						Id:         id,
 						Attendance: event.Competitions[0].Attendance,
 						State:      event.Status.Type.Name,
 						Date:       date,
 					}
 					if game.State == "STATUS_FINAL" {
-						shared.InsertGame(db, game, true)
+						InsertGame(db, game, true)
 						homeResult := "T"
 						awayResult := "T"
 						if homeScore > awayScore {
@@ -82,15 +81,15 @@ func espn() {
 							homeResult = "L"
 							awayResult = "W"
 						}
-						var gameTeams []shared.GameTeam
-						gameTeams = append(gameTeams, shared.GameTeam{
+						var gameTeams []GameTeam
+						gameTeams = append(gameTeams, GameTeam{
 							GameId: id,
 							TeamId: homeTeam,
 							Score:  homeScore,
 							Field:  event.Competitions[0].Competitors[0].HomeAway,
 							Result: homeResult,
 						})
-						gameTeams = append(gameTeams, shared.GameTeam{
+						gameTeams = append(gameTeams, GameTeam{
 							GameId: id,
 							TeamId: awayTeam,
 							Score:  awayScore,
@@ -98,7 +97,7 @@ func espn() {
 							Result: awayResult,
 						})
 						for _, gameTeam := range gameTeams {
-							shared.InsertGameTeam(db, gameTeam, true)
+							InsertGameTeam(db, gameTeam, true)
 						}
 					}
 
@@ -111,7 +110,7 @@ func espn() {
 						if err != nil {
 							log.Println(err, competitor.Team.DisplayName)
 						}
-						team := shared.Team{
+						team := Team{
 							Id:             id,
 							DisplayName:    competitor.Team.DisplayName,
 							Abbreviation:   competitor.Team.Abbreviation,
@@ -120,12 +119,12 @@ func espn() {
 							Logo:           competitor.Team.Logo,
 							ConferenceId:   conferenceId,
 						}
-						shared.InsertTeam(db, team, true)
+						InsertTeam(db, team, true)
 					}
 				}
 			}
 		}
-		shared.UploadDatabase()
+		UploadDatabase()
 		// Start at the current year on subsequent runs
 		startAt = year
 		time.Sleep(30 * time.Minute)
@@ -138,8 +137,8 @@ func generateApiUrl(year string, seasonType string, week string) string {
 	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?lang=en&region=us&calendartype=blacklist&limit=100&dates=" + year + "&seasontype=" + seasonType + "&week=" + week + "&groups=80"
 }
 
-func getScoreboard(url string) shared.Scoreboard {
-	var scoreboard shared.Scoreboard
+func getScoreboard(url string) Scoreboard {
+	var scoreboard Scoreboard
 	res, err := http.Get(url)
 	if err != nil {
 		panic(err.Error())
