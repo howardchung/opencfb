@@ -7,7 +7,7 @@ import { ApolloProvider } from "react-apollo";
 import ApolloClient from "apollo-boost";
 
 const client = new ApolloClient({
-  uri: "https://opencfb-howardc93.c9users.io/graphql"
+  uri: "https://api.opencfb.com/graphql"
 });
 
 const Games = () => (
