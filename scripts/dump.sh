@@ -1,1 +1,0 @@
-docker exec -i opencfb-postgres pg_dump postgres -U postgres --format=c
