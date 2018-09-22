@@ -1,6 +1,12 @@
 opencfb
 ====
 
+An open source project for exploring American college football data.
+
+The UI is a standard Create-React-App and can be edited in-browser using CodeSandbox: https://codesandbox.io/s/github/howardchung/opencfb
+
+The server is a Golang application located within the `server` directory.
+
 Quickstart
 ====
 * Install Go: `sudo rm -rf /opt/go && curl https://dl.google.com/go/go1.11.linux-amd64.tar.gz | sudo tar -C /opt -xz`
@@ -16,7 +22,7 @@ Quickstart
   * `curl -sSL https://github.com/cortesi/modd/releases/download/v0.7/modd-0.7-linux64.tgz | sudo tar zxv --strip-components 1 -C /usr/local/bin`
   * `modd`
 * This project uses go modules, added in Go 1.11. If the project exists within the GOPATH, it may not work properly. Changing the GOPATH can resolve this: `export GOPATH=/home/ubuntu`
-* Configure the application with a `.env` file in the root of the repo
+* Configure the application with a `.env` file in the root of the server directory
 
 Building a Docker container
 ====
