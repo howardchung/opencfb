@@ -1,13 +1,13 @@
-import React, { Component } from "react";
-import logo from "./logo.svg";
-import "./App.css";
-import { Query } from "react-apollo";
-import gql from "graphql-tag";
-import { ApolloProvider } from "react-apollo";
-import ApolloClient from "apollo-boost";
+import React, { Component } from 'react';
+import logo from './logo.svg';
+import './App.css';
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
+import { ApolloProvider } from 'react-apollo';
+import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient({
-  uri: "https://api.opencfb.com/graphql"
+  uri: 'https://api.opencfb.com/graphql',
 });
 
 const Games = () => (
@@ -32,7 +32,7 @@ const Games = () => (
       if (loading) return <p>Loading...</p>;
       if (error) return <p>Error :(</p>;
 
-      return <pre>{JSON.stringify(data)}</pre>;
+      return <pre>{JSON.stringify(data, null, 2)}</pre>;
     }}
   </Query>
 );
