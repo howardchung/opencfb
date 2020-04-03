@@ -1,0 +1,10 @@
+node_modules
+data
+vendor
+matchedTeams.txt
+.env
+main
+opencfb
+opencfb-data
+modd
+.exe
