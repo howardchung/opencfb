@@ -7,14 +7,14 @@ import { ApolloProvider } from 'react-apollo';
 import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient({
-  uri: 'https://api.opencfb.com/graphql',
+  uri: process.env.NODE_ENV === 'development' ? 'http://13.66.162.252:5000/graphql' : 'https://api.opencfb.com/graphql',
 });
 
 const Games = () => (
   <Query
     query={gql`
       {
-        game(teamId: "333") {
+        getGame(teamId: "333") {
           id
           state
           date
