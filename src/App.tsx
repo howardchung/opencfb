@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import { Query } from 'react-apollo';
+import { Query, QueryResult } from 'react-apollo';
 import gql from 'graphql-tag';
 import { ApolloProvider } from 'react-apollo';
 import ApolloClient from 'apollo-boost';
 
 const client = new ApolloClient({
-  uri: process.env.NODE_ENV === 'development' ? 'http://13.66.162.252:5000/graphql' : 'https://api.opencfb.com/graphql',
+  uri:
+    process.env.NODE_ENV === 'development'
+      ? 'http://azure.howardchung.net:8082/graphql'
+      : `${window.location.protocol}//${window.location.host}/graphql`,
 });
 
 const Games = () => (
@@ -28,7 +30,8 @@ const Games = () => (
       }
     `}
   >
-    {({ loading, error, data }) => {
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
       if (loading) return <p>Loading...</p>;
       if (error) return <p>Error :(</p>;
 
@@ -43,7 +46,6 @@ class App extends Component {
       <ApolloProvider client={client}>
         <div className="App">
           <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
             <h1 className="App-title">OpenCFB</h1>
           </header>
           <Games />
