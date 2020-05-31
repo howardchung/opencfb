@@ -21,7 +21,7 @@ func InitDatabase() *sqlx.DB {
 		log.Print(string(output))
 	}
 
-	connStr := "./opencfb-data/opencfb.sqlite"
+	connStr := "../data/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	schema, err := ioutil.ReadFile("./schema.sql")
 	if err != nil {
