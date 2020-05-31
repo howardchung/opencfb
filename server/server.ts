@@ -4,15 +4,18 @@ import { buildSchema } from 'graphql';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import cors from 'cors';
+import compression from 'compression';
+import fs from 'fs';
 
 let db: Database = (null as unknown) as Database;
 async function init() {
   db = await open({ filename: './data/opencfb.sqlite', driver: sqlite3.Database });
-  // TODO run the schema.sql file
-  // db.serialize(function() {
-  //     db.run("CREATE TABLE IF NOT EXISTS message (id TEXT, depth INT, data TEXT, pubkey TEXT, sig TEXT)");
-  //     db.run("CREATE INDEX IF NOT EXISTS message_id_idx ON message(id)");
-  // });
+  const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
+  const lines = schema.split('\n\n');
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    await db.run(line);
+  }
   app.listen(process.env.PORT || 5000);
 }
 init();
@@ -61,6 +64,7 @@ var root = {
 
 var app = express();
 app.use(cors());
+app.use(compression());
 app.use(
   '/graphql',
   graphqlHTTP({
@@ -69,7 +73,8 @@ app.use(
     graphiql: true,
   })
 );
-// TODO serve static client files
+// serve static client files
+app.use(express.static('build'));
 // TODO run update worker
 // TODO more features
 // - circles of parity
