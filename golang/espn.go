@@ -31,8 +31,8 @@ func espn() {
 
 		}
 	*/
-	// Start at 2001 (ESPN has data this far)
-	startAt := 2001
+	// Can start at 2001 (ESPN has data this far)
+	startAt := 2017
 	for {
 		year, _, _ := time.Now().Date()
 
