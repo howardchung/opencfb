@@ -124,9 +124,8 @@ func espn() {
 				}
 			}
 		}
-		UploadDatabase()
 		// Start at the current year on subsequent runs
-		startAt = year
+		startAt = year - 1
 		time.Sleep(30 * time.Minute)
 	}
 }
