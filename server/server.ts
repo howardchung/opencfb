@@ -9,7 +9,7 @@ import fs from 'fs';
 
 let db: Database = (null as unknown) as Database;
 async function init() {
-  db = await open({ filename: './data/opencfb.sqlite', driver: sqlite3.Database });
+  db = await open({ filename: './opencfb-data/opencfb.sqlite', driver: sqlite3.Database });
   const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
   const lines = schema.split('\n\n');
   for (let i = 0; i < lines.length; i++) {

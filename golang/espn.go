@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
+	// "strings"
 	"time"
 )
 
@@ -32,7 +32,7 @@ func espn() {
 		}
 	*/
 	// Can start at 2001 (ESPN has data this far)
-	startAt := 2017
+	startAt := 2020
 	for {
 		year, _, _ := time.Now().Date()
 
@@ -151,10 +151,10 @@ func getScoreboard(url string) Scoreboard {
 	if err != nil {
 		panic(err.Error())
 	}
-	err = ioutil.WriteFile("./data/espn/"+url[(strings.Index(url, "?")+1):], body, 0644)
-	if err != nil {
-		panic(err.Error())
-	}
+	// err = ioutil.WriteFile("./"+url[(strings.Index(url, "?")+1):], body, 0644)
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
 	return scoreboard
 }
 
