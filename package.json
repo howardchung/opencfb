@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/react-router-dom": "^5.1.5",
     "apollo-boost": "0.4.9",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -13,6 +14,7 @@
     "react": "^16.13.1",
     "react-apollo": "3.1.5",
     "react-dom": "^16.13.1",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "^3.4.1",
     "sqlite": "^4.0.9",
     "sqlite3": "^4.2.0"

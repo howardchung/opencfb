@@ -12,15 +12,6 @@ import (
 )
 
 func InitDatabase() *sqlx.DB {
-	// Grab the existing data from the cloud
-	if os.Getenv("GH_ACCESS_TOKEN") != "" {
-		output, err := exec.Command("../scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Print(string(output))
-	}
-
 	connStr := "../opencfb-data/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	schema, err := ioutil.ReadFile("../sql/schema.sql")
@@ -29,17 +20,6 @@ func InitDatabase() *sqlx.DB {
 	}
 	db.MustExec(string(schema))
 	return db
-}
-
-func UploadDatabase() {
-	// Upload the existing database to the cloud
-	if os.Getenv("GH_ACCESS_TOKEN") != "" {
-		output, err := exec.Command("../scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Print(string(output))
-	}
 }
 
 func InsertGame(db *sqlx.DB, game Game, replace bool) {
@@ -167,76 +147,4 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 		response = append(response, g)
 	}
 	return response
-}
-
-func GetRivalries(db *sqlx.DB, teamId int64, teamId2 int64) []Team {
-	return nil
-}
-
-func GetAllTimeRankings(db *sqlx.DB) []Team {
-	// Elo rank teams
-	// Start all teams at 1000
-	var ratingMap map[string]float64
-	ratingMap = make(map[string]float64)
-	// kFactor := 32.0
-
-	var response []Game
-	rows, _ := db.Queryx("SELECT * FROM game join gameteam on game.id = gameteam.gameid join gameteam gt2 on gt2.gameid = gameteam.gameid and gt2.teamid != gt.teamid order by game.date")
-	for rows.Next() {
-		var g Game
-		_ = rows.StructScan(&g)
-		response = append(response, g)
-	}
-	/*
-		// Iterate over games, when we find a new team add them to rating map
-		for _, g := range response {
-			team1 := g.HomeTeam
-			team2 := g.AwayTeam
-			// Set the default rating
-			if _, ok := ratingMap[team1]; !ok {
-				ratingMap[team1] = 1000
-			}
-			if _, ok := ratingMap[team2]; !ok {
-				ratingMap[team2] = 1000
-			}
-			currRating1 := ratingMap[team1]
-			currRating2 := ratingMap[team2]
-			r1 := math.Pow(10, currRating1/400)
-			r2 := math.Pow(10, currRating2/400)
-			e1 := r1 / (r1 + r2)
-			e2 := r2 / (r1 + r2)
-			diff1 := 0.0
-			diff2 := 0.0
-			// Update the team's rating
-			if g.res == "W" {
-				diff1 = kFactor * (1 - e1)
-				diff2 = kFactor * (0 - e2)
-			} else if g.res == "L" {
-				diff1 = kFactor * (0 - e1)
-				diff2 = kFactor * (1 - e2)
-			}
-			ratingMap[team1] += diff1
-			ratingMap[team2] += diff2
-		}
-	*/
-
-	var teams []Team
-	// Place map values in list of teams
-	for k, v := range ratingMap {
-		teams = append(teams, Team{DisplayName: k, Rating: v})
-	}
-	// sort.Sort(ByRating(teams))
-	return teams
-}
-
-func GetCurrentWinStreaks() {
-
-}
-
-func GetLongestWinStreaks() {
-
-}
-
-func GetMarginsOfVictory() {
-
 }
