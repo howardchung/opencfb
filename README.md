@@ -19,6 +19,7 @@ An open source project for exploring American college football data.
 - Build a binary: `go build`
 
 # Getting preloaded data
+
 - `git submodule update --init --recursive`
 
 # Tech
