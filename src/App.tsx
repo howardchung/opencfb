@@ -159,7 +159,7 @@ class App extends Component {
       <ApolloProvider client={client}>
         <div className="App">
           <header className="App-header">
-            <h1 className="App-title">OpenCFB</h1>
+            <div style={{ textTransform: 'uppercase', fontWeight: 600 }}>{`<OpenCFB/>`}</div>
           </header>
           <BrowserRouter>
             <Switch>
