@@ -1,3 +1,4 @@
+/* Downloads data from jhowell and writes to a CSV file */
 package main
 
 import (
