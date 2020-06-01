@@ -4,21 +4,21 @@ import (
 	// "encoding/binary"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	"os"
-	"os/exec"
+	// "os/exec"
 	"time"
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "../opencfb-data/opencfb.sqlite"
+	connStr := os.Getenv("DB_PATH")
 	db := sqlx.MustConnect("sqlite3", connStr)
-	schema, err := ioutil.ReadFile("../sql/schema.sql")
-	if err != nil {
-		log.Fatal(err)
-	}
-	db.MustExec(string(schema))
+	// schema, err := ioutil.ReadFile("../sql/schema.sql")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// db.MustExec(string(schema))
 	return db
 }
 

@@ -1,3 +1,4 @@
+require('dotenv').config();
 import express from 'express';
 import graphqlHTTP from 'express-graphql';
 import { buildSchema } from 'graphql';
@@ -6,9 +7,13 @@ import { open, Database } from 'sqlite';
 import cors from 'cors';
 import compression from 'compression';
 import fs from 'fs';
+import { execFileSync, execSync } from 'child_process';
+import path from 'path';
 
 let db: Database = (null as unknown) as Database;
 async function init() {
+  // Download the DB
+  downloadDB();
   db = await open({
     filename: './opencfb-data/opencfb.sqlite',
     driver: sqlite3.Database,
@@ -19,9 +24,34 @@ async function init() {
     const line = lines[i];
     await db.run(line);
   }
+  // Update and upload the new DB
+  setTimeout(updateAndUploadDB, 0);
+  setInterval(updateAndUploadDB, 60 * 60 * 1000);
   app.listen(process.env.PORT || 5000);
 }
 init();
+
+function downloadDB() {
+  if (!process.env.ENABLE_GH_DB_SYNC) {
+    return;
+  }
+  try {
+    execSync('bash ./scripts/download.sh');
+  } catch (e) {
+    console.warn(e);
+  }
+}
+function updateAndUploadDB() {
+  if (!process.env.ENABLE_GH_DB_SYNC) {
+    return;
+  }
+  try {
+    execFileSync('./golang/opencfb', { env: { SVC: 'espn', DB_PATH: path.resolve('./opencfb-data/opencfb.sqlite') }, stdio: 'inherit' });
+    execSync('bash ./scripts/upload.sh');
+  } catch (e) {
+    console.warn(e);
+  }
+}
 
 // Construct a schema, using GraphQL schema language
 var schema = buildSchema(`
@@ -95,7 +125,6 @@ app.use(
 );
 // serve static client files
 app.use(express.static('build'));
-// TODO run update worker
 // TODO more features
 // - circles of parity
 // - all time rankings
