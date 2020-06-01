@@ -216,11 +216,6 @@ var queryType = graphql.NewObject(graphql.ObjectConfig{
 				return GetGames(db, teamId, season), nil
 			},
 		},
-		// TODO rankings
-		// TODO rivalries
-		// TODO circles
-		// TODO winstreaks
-		// TODO margins of victory
 	},
 })
 

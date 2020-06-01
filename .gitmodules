@@ -1,0 +1,3 @@
+[submodule "opencfb-data"]
+	path = opencfb-data
+	url = https://github.com/howardchung/opencfb-data

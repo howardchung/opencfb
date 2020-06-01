@@ -16,7 +16,10 @@ An open source project for exploring American college football data.
 - Running the ingestion workers yourself:
   - `SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
   - `SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
+- Build a binary: `go build`
 
+# Getting preloaded data
+- `git submodule update --init --recursive`
 
 # Tech
 
