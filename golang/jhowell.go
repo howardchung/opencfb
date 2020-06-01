@@ -149,6 +149,7 @@ func jhowell() {
 
 // espn team ids range from 2 to 3200
 // jhowell teams, hash the unique key (name), take the result % (2^32) and add (2^32) (match to espn team by similarity if possible, otherwise assign id)
+// This places the jhowell data in a separate ID space starting at 2 billion
 func generateTeamId(name string) int64 {
 	key := name
 	sum := sha256.Sum256([]byte(key))
@@ -158,6 +159,7 @@ func generateTeamId(name string) int64 {
 
 // espn game ids range from 212350097 to 400986609
 // jhowell games, hash the unique key (date, name, opp) sorted, take the result % 2^32 and add 2^32 (games before 2001)
+// This places the jhowell data in a separate ID space starting at 2 billion
 func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	homeIntString := strconv.FormatInt(homeTeam, 10)
 	awayIntString := strconv.FormatInt(awayTeam, 10)

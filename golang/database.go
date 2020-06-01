@@ -13,17 +13,17 @@ import (
 
 func InitDatabase() *sqlx.DB {
 	// Grab the existing data from the cloud
-	if os.Getenv("GIT_DATA_REPO") != "" {
-		output, err := exec.Command("./scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
+	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+		output, err := exec.Command("../scripts/download.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Print(string(output))
 	}
 
-	connStr := "../data/opencfb.sqlite"
+	connStr := "../opencfb-data/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
-	schema, err := ioutil.ReadFile("./schema.sql")
+	schema, err := ioutil.ReadFile("../sql/schema.sql")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,8 +33,8 @@ func InitDatabase() *sqlx.DB {
 
 func UploadDatabase() {
 	// Upload the existing database to the cloud
-	if os.Getenv("GIT_DATA_REPO_ACCESS_TOKEN") != "" {
-		output, err := exec.Command("./scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
+	if os.Getenv("GH_ACCESS_TOKEN") != "" {
+		output, err := exec.Command("../scripts/upload.sh", os.Getenv("GH_ACCESS_TOKEN")).CombinedOutput()
 		if err != nil {
 			log.Fatal(err)
 		}
