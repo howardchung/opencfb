@@ -49,6 +49,7 @@ type Game struct {
 	State      string
 	Date       time.Time
 	Teams      []Team
+	Source     string
 }
 
 type Team struct {
