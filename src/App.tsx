@@ -160,6 +160,8 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
       }
     `}
     variables={{ teamId }}
+    // Apollo caching causes opponent object to be reused, showing wrong data?
+    fetchPolicy='no-cache'
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
@@ -190,7 +192,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                     {new Date(row.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <img style={{ height: '24px' }} src={row.logo} />
+                    <img style={{ width: '24px' }} src={row.logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -210,7 +212,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                   </TableCell>
                   <TableCell>{row.field === 'away' ? '@' : 'vs.'}</TableCell>
                   <TableCell>
-                    <img style={{ height: '24px' }} src={row.opponent.logo} />
+                    <img style={{ width: '24px' }} src={row.opponent.logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -273,6 +275,7 @@ const Games = () => (
         }
       }
     `}
+    fetchPolicy="no-cache"
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
@@ -302,7 +305,7 @@ const Games = () => (
                     {new Date(row.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <img style={{ height: '24px' }} src={row.teams[0].logo} />
+                    <img style={{ width: '24px' }} src={row.teams[0].logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -340,7 +343,7 @@ const Games = () => (
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <img style={{ height: '24px' }} src={row.teams[1].logo} />
+                    <img style={{ width: '24px' }} src={row.teams[1].logo} />
                   </TableCell>
                   <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
                     {row.teams[0].score} - {row.teams[1].score}
@@ -420,11 +423,10 @@ const Rankings = () => (
                 <TableRow key={row.id}>
                   <TableCell align="left">{i + 1}</TableCell>
                   <TableCell>
-                    {' '}
                     <img
-                      style={{ height: '24px' }}
+                      style={{ width: '24px' }}
                       src={row.logo}
-                      alt={row.displayName}
+                      alt={''}
                     />
                   </TableCell>
                   <TableCell component="th" scope="row">
