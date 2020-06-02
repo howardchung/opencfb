@@ -113,9 +113,9 @@ var root = {
     );
     return data;
   },
-  listTeamGame: async ({ teamId }: { teamId: string; gameId: string }) => {
+  listTeamGame: async ({ teamId }: { teamId: string; }) => {
     const data = await db.all(
-      `SELECT game.id, game.date, ged.delta, team.logo, team.displayname as "displayName", gameteam.score, gameteam.rating, gameteam.result, gameteam.field, gt2.score as oppScore, gt2.teamid as oppId, gt2.rating as oppRating, oppTeam.logo as oppLogo, oppTeam.displayname as oppName
+      `SELECT game.id, game.date, ged.delta, team.logo, team.displayname as "displayName", gameteam.score, gameteam.rating, gameteam.result, gameteam.field, gt2.score as oppScore, gt2.teamid as oppId, gt2.rating as oppRating, gt2.result as oppResult, oppTeam.logo as oppLogo, oppTeam.displayname as oppName
       FROM game
       join gameteam on game.id = gameteam.gameid
       join gameteam gt2 on gt2.gameid = gameteam.gameid and gt2.teamid != gameteam.teamid
@@ -123,7 +123,8 @@ var root = {
       left join team oppTeam on oppTeam.id = gt2.teamid
       left join game_elo_delta ged on ged.id = game.id
       where gameteam.teamid = ?
-      order by game.date desc`,
+      order by game.date desc
+      `,
       [teamId]
     );
     const final = data.map((row) => ({
@@ -142,6 +143,7 @@ var root = {
         displayName: row.oppName,
         score: row.oppScore,
         rating: row.oppRating,
+        result: row.oppResult,
       },
     }));
     return final;
@@ -184,6 +186,7 @@ var root = {
         },
       ],
     }));
+
     return final;
   },
   listRankingTeam: async ({ limit }: { limit: number }) => {
