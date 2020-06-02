@@ -22,25 +22,39 @@ func InitDatabase() *sqlx.DB {
 	return db
 }
 
+func BeginTransaction(db *sqlx.DB) {
+	_, err := db.Exec("BEGIN TRANSACTION");
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func Commit(db *sqlx.DB) {
+	_, err := db.Exec("COMMIT");
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func InsertGame(db *sqlx.DB, game Game, replace bool) {
 	query := `INSERT OR IGNORE INTO game VALUES ($1, $2, $3, $4)`
 	if replace {
 		query = `INSERT OR REPLACE INTO game VALUES ($1, $2, $3, $4)`
 	}
 	_, err := db.Exec(query,
-		game.Id, game.Attendance, game.State, game.Date)
+		game.Id, game.Attendance, game.Date, game.Source)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam, replace bool) {
-	query := `INSERT OR IGNORE INTO gameteam VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT OR IGNORE INTO gameteam VALUES ($1, $2, $3, $4, $5, $6)`
 	if replace {
-		query = `INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5)`
+		query = `INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5, $6)`
 	}
 	_, err := db.Exec(query,
-		gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result)
+		gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

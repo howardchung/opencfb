@@ -64,6 +64,12 @@ func jhowell() {
 			// Playoff games occur the next year
 			year += 1
 		}
+
+		// Ignore games more recent than this as we switch to ESPN data source
+		if year > 2001 || (year == 2001 && month >= 8) {
+			continue
+		}
+
 		gameDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 
 		// determine if home/away/neutral, s[0] is home if s[3] is not @ and s[8] doesn't start with @ (neutral site)
@@ -84,7 +90,7 @@ func jhowell() {
 		games = append(games, Game{
 			Id:    generatedId,
 			Date:  gameDate,
-			State: "STATUS_FINAL",
+			Source: "jh",
 		})
 		homeResult := s[5]
 		awayResult := "T"
