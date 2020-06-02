@@ -4,8 +4,9 @@ An open source project for exploring American college football data.
 
 # Quickstart
 
+- `npm install`
 - `npm run server`: The API is implemented using Node.js. There is a semi-working one in Go.
-- The API serves a [GraphQL](https://github.com/graphql) server. You can run queries against it using the graphiql interface at `/`
+- The API serves a [GraphQL](https://graphql.org) server. You can run queries against it using the graphiql interface at `/`
 - Configure the application with a `.env` file in the root of the server directory
 
 # Data Ingestion
@@ -14,13 +15,13 @@ An open source project for exploring American college football data.
 - Go to the `golang` directory
 - This project uses go modules, added in Go 1.11. If the project exists within the GOPATH, it may not work properly. Changing the GOPATH can resolve this: `export GOPATH=/home/ubuntu`
 - Running the ingestion workers yourself:
-  - `SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
-  - `SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
+  - `DB_PATH=<path_to_sqlite> SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
+  - `DB_PATH=<path_to_sqlite> SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
 - Build a binary for the JS application to use: `go build`
 
-# Getting preloaded data
+# Database
 
-- `git clone https://github.com/howardchung/opencfb-data`
+- The application expects a SQLite database in a `opencfb-data` directory.
 
 # Auto-syncing data to GitHub
 

@@ -12,6 +12,7 @@ import (
 
 func espn() {
 	db := InitDatabase()
+	BeginTransaction(db);
 
 	/*
 		var conferences Conferences
@@ -51,6 +52,7 @@ func espn() {
 		// loop over queue and make those API calls
 		for _, apiCall := range queue {
 			log.Println(apiCall)
+			time.Sleep(100 * time.Millisecond)
 			scoreboard := getScoreboard(apiCall)
 			for _, event := range scoreboard.Events {
 				id, _ := strconv.ParseInt(event.Id, 10, 64)
@@ -96,7 +98,8 @@ func espn() {
 						Result: awayResult,
 					})
 					for _, gameTeam := range gameTeams {
-						InsertGameTeam(db, gameTeam, true)
+						// Replace is false since we currently write rating data to this table
+						InsertGameTeam(db, gameTeam, false)
 					}
 				}
 
@@ -123,6 +126,7 @@ func espn() {
 			}
 		}
 	}
+	Commit(db)
 }
 
 func generateApiUrl(year string, seasonType string, week string) string {
