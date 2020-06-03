@@ -1,5 +1,5 @@
 #!/bin/bash
 cd opencfb-data
 git add opencfb.sqlite
-git commit -m "Update database" --author "Auto Updater <>"
+git -c user.name='Auto Updater' -c user.email='auto@opencfb.com' commit -m "Update database"
 git push origin master -f
