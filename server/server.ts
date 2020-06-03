@@ -289,7 +289,7 @@ app.use(
 app.use(express.static('build'));
 // Send index.html for all other requests (SPA)
 app.use('/*', (req, res) => {
-  res.sendFile(__dirname + '/build/public/index.html');
+  res.sendFile(path.resolve(__dirname + '/../build/index.html'));
 });
 // TODO more features
 // - circles of parity (longest cycle in directed graph problem)
