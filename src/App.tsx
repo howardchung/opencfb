@@ -19,7 +19,15 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Container from '@material-ui/core/Container';
-import Badge from '@material-ui/core/Badge';
+import {
+  LineChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Line,
+  ResponsiveContainer,
+} from 'recharts';
 
 const client = new ApolloClient({
   uri:
@@ -138,7 +146,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
   <Query
     query={gql`
       query TeamGames($teamId: String) {
-        listTeamGame(teamId: $teamId) {
+        listTeamGame(teamId: $teamId, limit: 100) {
           id
           date
           score
@@ -161,14 +169,13 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
     `}
     variables={{ teamId }}
     // Apollo caching causes opponent object to be reused, showing wrong data?
-    fetchPolicy='no-cache'
+    fetchPolicy="no-cache"
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
       if (loading) return <p>Loading...</p>;
       if (error) return <p>Error :(</p>;
 
-      console.log(data);
       const rows = data.listTeamGame;
       return (
         <TableContainer component={Paper}>
@@ -181,6 +188,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                 <TableCell />
                 <TableCell />
                 <TableCell align="left">Opponent</TableCell>
+                <TableCell align="right">Result</TableCell>
                 <TableCell align="right">Score</TableCell>
                 <TableCell align="right">Delta</TableCell>
               </TableRow>
@@ -231,6 +239,15 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                       ({Math.floor(row.opponent.rating) || 'NR'})
                     </Typography>
                   </TableCell>
+                  <TableCell
+                    align="right"
+                    style={{
+                      fontWeight: 'bold',
+                      color: getColorForResult(row.result),
+                    }}
+                  >
+                    {row.result}
+                  </TableCell>
                   <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
                     {row.score} - {row.opponent.score}
                   </TableCell>
@@ -238,13 +255,13 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                     {row.result === 'W' && '+'}
                     {row.result === 'L' && '-'}
                     {Math.floor(row.delta)}{' '}
-                    <Typography variant="caption">
+                    {/* <Typography variant="caption">
                       (
                       {Math.floor(
                         row.rating + row.delta * (row.result === 'L' ? -1 : 1)
                       ) || 'NR'}
                       )
-                    </Typography>
+                    </Typography> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -423,11 +440,7 @@ const Rankings = () => (
                 <TableRow key={row.id}>
                   <TableCell align="left">{i + 1}</TableCell>
                   <TableCell>
-                    <img
-                      style={{ width: '24px' }}
-                      src={row.logo}
-                      alt={''}
-                    />
+                    <img style={{ width: '24px' }} src={row.logo} alt={''} />
                   </TableCell>
                   <TableCell component="th" scope="row">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -462,10 +475,10 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      When two chess players play a game, their rating values are updated based
-      on the expected result given the strength of their opponent. A strong
-      player defeating a weak one will cause a small rating change, while a weak
-      player defeating a strong opponent will cause a bigger change.
+      When chess players play a game, their rating values change by an amount
+      based on the expected result given the strength of their opponent. A
+      strong player defeating a weak one will cause a small rating change, while
+      a weak player defeating a strong opponent will cause a bigger change.
     </Typography>
     <br />
     <Typography>
@@ -480,7 +493,7 @@ const Home = () => (
       , and has been used for many different types of games.
     </Typography>
     <Typography>
-      Let's try it with over 70,000 college football games dating back to 1869!
+      Let's try it with over 75,000 college football games dating back to 1869!
     </Typography>
     <br />
     <Typography variant="button">Notes</Typography>
@@ -504,8 +517,57 @@ const Home = () => (
 const TeamPage = ({ teamId }: { teamId: string }) => (
   <div>
     <Team teamId={teamId} />
+    <RatingGraph teamId={teamId} />
     <TeamGames teamId={teamId} />
   </div>
+);
+
+const RatingGraph = ({ teamId }: { teamId: string }) => (
+  <Query
+    query={gql`
+      query ListRatingHistory($teamId: String!) {
+        listRatingHistory(teamId: $teamId) {
+          date
+          result
+          rating
+        }
+      }
+    `}
+    variables={{ teamId }}
+  >
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      const graphData = data.listRatingHistory;
+      return (
+        <ResponsiveContainer width={'100%'} height={300}>
+          <LineChart
+            data={graphData}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="date"
+              tickFormatter={(val) => new Date(val).getFullYear()}
+            />
+            <YAxis />
+            <Tooltip
+              labelFormatter={(label) => new Date(label).toLocaleDateString()}
+              formatter={(value, name, props) => [value]}
+            />
+            <Line
+              dot={false}
+              type="monotone"
+              dataKey="rating"
+              stroke="#8884d8"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }}
+  </Query>
 );
 
 const GamePage = ({ gameId }: { gameId: string }) => (
@@ -611,3 +673,14 @@ class App extends Component {
 }
 
 export default App;
+
+const getColorForResult = (result: string) => {
+  if (result === 'W') {
+    return 'green';
+  } else if (result === 'L') {
+    return 'red';
+  } else if (result === 'T') {
+    return 'gray';
+  }
+  return 'black';
+};
