@@ -28,7 +28,7 @@ async function init() {
 init();
 
 async function updateTasks() {
-  await updateDB();
+  updateDB();
   await computeCounts();
   await computeRankings();
   uploadDB();
@@ -83,13 +83,20 @@ var schema = buildSchema(`
     gamesPlayed: Int
     gamesWon: Int
   }
+
+  type RatingHistory {
+    date: String
+    result: String
+    rating: Float
+  }
   
   type Query {
     getTeam(teamId: String): Team
     listTeam(limit: Int): [Team]
-    listTeamGame(teamId: String, gameId: String): [TeamGame]
+    listTeamGame(teamId: String, limit: Int): [TeamGame]
     listGame(limit: Int): [Game]
     listRankingTeam(limit: Int): [RankingTeam]
+    listRatingHistory(teamId: String): [RatingHistory]
   }
 `);
 
@@ -113,7 +120,13 @@ var root = {
     );
     return data;
   },
-  listTeamGame: async ({ teamId }: { teamId: string; }) => {
+  listTeamGame: async ({
+    teamId,
+    limit,
+  }: {
+    teamId: string;
+    limit: number;
+  }) => {
     const data = await db.all(
       `SELECT game.id, game.date, ged.delta, team.logo, team.displayname as "displayName", gameteam.score, gameteam.rating, gameteam.result, gameteam.field, gt2.score as oppScore, gt2.teamid as oppId, gt2.rating as oppRating, gt2.result as oppResult, oppTeam.logo as oppLogo, oppTeam.displayname as oppName
       FROM game
@@ -124,8 +137,9 @@ var root = {
       left join game_elo_delta ged on ged.id = game.id
       where gameteam.teamid = ?
       order by game.date desc
+      limit ?
       `,
-      [teamId]
+      [teamId, limit]
     );
     const final = data.map((row) => ({
       id: row.id,
@@ -198,6 +212,18 @@ var root = {
       where team.displayName NOT LIKE '%(non-IA)'
       order by rating desc limit ?`,
       [limit]
+    );
+    return data;
+  },
+  listRatingHistory: async ({ teamId }: { teamId: string }) => {
+    const data = await db.all(
+      `SELECT date, result, cast(rating as int) as rating
+      from game
+      join gameteam on gameteam.gameid = game.id
+      where gameteam.teamid = ?
+      order by date asc
+      `,
+      [teamId]
     );
     return data;
   },
