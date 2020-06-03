@@ -19,6 +19,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Container from '@material-ui/core/Container';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import {
   LineChart,
   CartesianGrid,
@@ -28,6 +30,8 @@ import {
   Line,
   ResponsiveContainer,
 } from 'recharts';
+import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 
 const client = new ApolloClient({
   uri:
@@ -85,13 +89,18 @@ const Team = ({ teamId }: { teamId: string }) => (
       if (error) return <p>Error :(</p>;
 
       const team = data.getTeam;
+      if (!team) {
+        return null;
+      }
       return (
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img
-            src={team.logo}
-            style={{ height: '150px' }}
-            alt={team.displayName}
-          />
+          {team.logo && (
+            <img
+              src={team.logo}
+              style={{ height: '150px' }}
+              alt={team.displayName}
+            />
+          )}
           <div style={{ width: '100%', marginLeft: '20px' }}>
             <Typography variant="h4" style={{ color: '#' + team.color }}>
               {team.displayName}
@@ -200,7 +209,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                     {new Date(row.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <img style={{ width: '24px' }} src={row.logo} />
+                    <img className="teamLogo" src={row.logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -210,7 +219,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                   >
                     <Link
                       style={{ color: 'black', textDecoration: 'none' }}
-                      to={`/teams/${row.id}`}
+                      to={`/teams/${teamId}`}
                     >
                       {row.displayName}
                     </Link>{' '}
@@ -220,7 +229,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                   </TableCell>
                   <TableCell>{row.field === 'away' ? '@' : 'vs.'}</TableCell>
                   <TableCell>
-                    <img style={{ width: '24px' }} src={row.opponent.logo} />
+                    <img className="teamLogo" src={row.opponent.logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -262,6 +271,66 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
                       ) || 'NR'}
                       )
                     </Typography> */}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      );
+    }}
+  </Query>
+);
+
+const TeamRivalry = ({ teamId }: { teamId: string }) => (
+  <Query
+    query={gql`
+      query TeamRivalry($teamId: String) {
+        listTeamRivalry(teamId: $teamId) {
+          id
+          logo
+          displayName
+          gamesPlayed
+          gamesWon
+        }
+      }
+    `}
+    variables={{ teamId }}
+  >
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      const rows = data.listTeamRivalry;
+      return (
+        <TableContainer component={Paper}>
+          <Table aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell />
+                <TableCell align="left">Opponent</TableCell>
+                <TableCell align="right">Games Played</TableCell>
+                <TableCell align="right">Win %</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row: any, i: number) => (
+                <TableRow key={row.id}>
+                  <TableCell>
+                    <img className="teamLogo" src={row.logo} />
+                  </TableCell>
+                  <TableCell align="left">
+                    <Link
+                      style={{ color: 'black', textDecoration: 'none' }}
+                      to={`/teams/${row.id}`}
+                    >
+                      {row.displayName}
+                    </Link>
+                  </TableCell>
+                  <TableCell align="right">{row.gamesPlayed}</TableCell>
+                  <TableCell align="right">
+                    {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + '%'}
                   </TableCell>
                 </TableRow>
               ))}
@@ -322,7 +391,7 @@ const Games = () => (
                     {new Date(row.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <img style={{ width: '24px' }} src={row.teams[0].logo} />
+                    <img className="teamLogo" src={row.teams[0].logo} />
                   </TableCell>
                   <TableCell
                     align="left"
@@ -360,7 +429,7 @@ const Games = () => (
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <img style={{ width: '24px' }} src={row.teams[1].logo} />
+                    <img className="teamLogo" src={row.teams[1].logo} />
                   </TableCell>
                   <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
                     {row.teams[0].score} - {row.teams[1].score}
@@ -440,7 +509,7 @@ const Rankings = () => (
                 <TableRow key={row.id}>
                   <TableCell align="left">{i + 1}</TableCell>
                   <TableCell>
-                    <img style={{ width: '24px' }} src={row.logo} alt={''} />
+                    <img className="teamLogo" src={row.logo} alt={''} />
                   </TableCell>
                   <TableCell component="th" scope="row">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -467,6 +536,76 @@ const Rankings = () => (
   </Query>
 );
 
+const Streaks = ({ type }: { type: string }) => (
+  <Query
+    query={gql`
+      query ListStreak($type: String) {
+        listStreak(type: $type) {
+          id
+          logo
+          displayName
+          current
+          allTime
+        }
+      }
+    `}
+    variables={{ type }}
+  >
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      const rows = data.listStreak;
+      return (
+        <TableContainer component={Paper}>
+          <Table aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell align="left">#</TableCell>
+                <TableCell />
+                <TableCell align="left">Name</TableCell>
+                {type === 'allTime' ? (
+                  <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
+                    All Time
+                  </TableCell>
+                ) : (
+                  <TableCell align="right">Current</TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row: any, i: number) => (
+                <TableRow key={row.id}>
+                  <TableCell align="left">{i + 1}</TableCell>
+                  <TableCell>
+                    <img className="teamLogo" src={row.logo} alt={''} />
+                  </TableCell>
+                  <TableCell component="th" scope="row">
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Link
+                        style={{ color: 'black', textDecoration: 'none' }}
+                        to={`/teams/${row.id}`}
+                      >
+                        {row.displayName}
+                      </Link>
+                    </div>
+                  </TableCell>
+                  {type === 'allTime' ? (
+                    <TableCell align="right">{row.allTime}</TableCell>
+                  ) : (
+                    <TableCell align="right">{row.current}</TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      );
+    }}
+  </Query>
+);
+
 const Home = () => (
   <div>
     <Typography variant="h2">What if...</Typography>
@@ -475,10 +614,10 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      When chess players play a game, their rating values change by an amount
-      based on the expected result given the strength of their opponent. A
-      strong player defeating a weak one will cause a small rating change, while
-      a weak player defeating a strong opponent will cause a bigger change.
+      When chess players play a game, their ratings change by an amount based on
+      the expected result given the strength of their opponent. A strong player
+      defeating a weak one will cause a small rating change, while a weak player
+      defeating a strong opponent will cause a bigger change.
     </Typography>
     <br />
     <Typography>
@@ -514,13 +653,58 @@ const Home = () => (
   </div>
 );
 
-const TeamPage = ({ teamId }: { teamId: string }) => (
-  <div>
-    <Team teamId={teamId} />
-    <RatingGraph teamId={teamId} />
-    <TeamGames teamId={teamId} />
-  </div>
-);
+const TeamPage = ({ teamId }: { teamId: string }) => {
+  const [value, setValue] = React.useState(0);
+
+  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setValue(newValue);
+  };
+
+  return (
+    <div>
+      <Team teamId={teamId} />
+      <RatingGraph teamId={teamId} />
+      <Paper square>
+        <Tabs value={value} onChange={handleChange}>
+          <Tab label="Games" />
+          <Tab label="Rivalries" />
+        </Tabs>
+        <TabPanel value={value} index={0}>
+          <TeamGames teamId={teamId} />
+        </TabPanel>
+        <TabPanel value={value} index={1}>
+          <TeamRivalry teamId={teamId} />
+        </TabPanel>
+      </Paper>
+    </div>
+  );
+};
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: any;
+  value: any;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box p={3}>
+          <Typography>{children}</Typography>
+        </Box>
+      )}
+    </div>
+  );
+}
 
 const RatingGraph = ({ teamId }: { teamId: string }) => (
   <Query
@@ -604,12 +788,6 @@ class App extends Component {
               >
                 <Button color="inherit">Teams</Button>
               </Link> */}
-              <Link
-                to="/games"
-                style={{ textDecoration: 'none', color: 'white' }}
-              >
-                <Button color="inherit">Games</Button>
-              </Link>
               {/* <Link
                 to="/rivalries"
                 style={{ textDecoration: 'none', color: 'white' }}
@@ -617,17 +795,23 @@ class App extends Component {
                 <Button color="inherit">Rivalries</Button>
               </Link> */}
               {/* <Link
-                to="/streaks"
-                style={{ textDecoration: 'none', color: 'white' }}
-              >
-                <Button color="inherit">Streaks</Button>
-              </Link> */}
-              {/* <Link
                 to="/circles"
                 style={{ textDecoration: 'none', color: 'white' }}
               >
                 <Button color="inherit">Circles</Button>
               </Link> */}
+              <Link
+                to="/streaks"
+                style={{ textDecoration: 'none', color: 'white' }}
+              >
+                <Button color="inherit">Streaks</Button>
+              </Link>
+              <Link
+                to="/games"
+                style={{ textDecoration: 'none', color: 'white' }}
+              >
+                <Button color="inherit">Games</Button>
+              </Link>
               <a
                 style={{ marginLeft: 'auto' }}
                 href="https://github.com/howardchung/opencfb"
@@ -664,6 +848,21 @@ class App extends Component {
                 )}
               /> */}
               <Route path="/rankings" render={({ match }) => <Rankings />} />
+              <Route
+                path="/streaks"
+                render={({ match }) => (
+                  <div>
+                    <Grid container spacing={3}>
+                      <Grid item xs>
+                        <Streaks type="current" />
+                      </Grid>
+                      <Grid item xs>
+                        <Streaks type="allTime" />
+                      </Grid>
+                    </Grid>
+                  </div>
+                )}
+              />
             </Switch>
           </Container>
         </BrowserRouter>

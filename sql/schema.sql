@@ -43,6 +43,12 @@ CREATE TABLE IF NOT EXISTS team_count (
   gamesTied int
 );
 
+CREATE TABLE IF NOT EXISTS team_streak (
+  id bigint REFERENCES team(id) PRIMARY KEY,
+  current int,
+  allTime int
+);
+
 CREATE TABLE IF NOT EXISTS game_elo_delta (
   id bigint REFERENCES game(id) PRIMARY KEY,
   delta real

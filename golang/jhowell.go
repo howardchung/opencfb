@@ -33,6 +33,7 @@ func jhowell() {
 	var games []Game
 	var gameTeams []GameTeam
 	var teams []Team
+	gameSet := make(map[int64]bool)
 	var nameMap map[string]int64
 	if _, err := os.Stat("./jhowellMappings.json"); err == nil {
 		// Read the saved map
@@ -58,8 +59,6 @@ func jhowell() {
 		year, _ := strconv.Atoi(s[1])
 		month, _ := strconv.Atoi(monthDay[0])
 		day, _ := strconv.Atoi(monthDay[1])
-		homeScore, _ := strconv.ParseInt(s[6], 10, 64)
-		awayScore, _ := strconv.ParseInt(s[7], 10, 64)
 		if month == 1 {
 			// Playoff games occur the next year
 			year += 1
@@ -73,25 +72,13 @@ func jhowell() {
 		gameDate := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 
 		// determine if home/away/neutral, s[0] is home if s[3] is not @ and s[8] doesn't start with @ (neutral site)
+		isNeutralSite := strings.HasPrefix(s[8], "@")
+		// Scores and result aren't relative to the home team, but to first team in the row
+		// If first team isn't home, then we need to flip everything
 		homeString := s[0]
 		awayString := s[4]
-		if strings.HasPrefix(s[3], "@") {
-			// swap
-			homeString, awayString = awayString, homeString
-		}
-		isNeutralSite := strings.HasPrefix(s[8], "@")
-
-		homeTeamId := matchTeamStringToId(postgresDb, homeString, nameMap)
-		awayTeamId := matchTeamStringToId(postgresDb, awayString, nameMap)
-
-		// Create a game ID
-		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
-
-		games = append(games, Game{
-			Id:    generatedId,
-			Date:  gameDate,
-			Source: "jh",
-		})
+		homeScore, _ := strconv.ParseInt(s[6], 10, 64)
+	  awayScore, _ := strconv.ParseInt(s[7], 10, 64)
 		homeResult := s[5]
 		awayResult := "T"
 		if homeResult == "W" {
@@ -100,10 +87,43 @@ func jhowell() {
 		if homeResult == "L" {
 			awayResult = "W"
 		}
+
 		homeField := "neutral"
+		awayField := "neutral"
 		if !isNeutralSite {
 			homeField = "home"
+			awayField = "away"
 		}
+		if strings.HasPrefix(s[3], "@") {
+			// swap everything since first team is away
+			homeString, awayString = awayString, homeString
+			homeScore, awayScore = awayScore, homeScore
+			homeResult, awayResult = awayResult, homeResult
+			homeField, awayField = awayField, homeField
+		}
+
+		homeTeamId := matchTeamStringToId(postgresDb, homeString, nameMap)
+		awayTeamId := matchTeamStringToId(postgresDb, awayString, nameMap)
+
+		// Create a game ID
+		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
+
+		// Check if we already added this game (jhowell data lists every game twice since it's under both schools)
+		exists := gameSet[generatedId]
+		if exists {
+			continue
+		}
+		gameSet[generatedId] = true
+
+		// if generatedId == 5181333640 {
+		// 	log.Println(line)
+		// }
+
+		games = append(games, Game{
+			Id:    generatedId,
+			Date:  gameDate,
+			Source: "jh",
+		})
 		gameTeams = append(gameTeams, GameTeam{
 			GameId: generatedId,
 			TeamId: homeTeamId,
@@ -111,10 +131,6 @@ func jhowell() {
 			Field:  homeField,
 			Result: homeResult,
 		})
-		awayField := "neutral"
-		if !isNeutralSite {
-			awayField = "away"
-		}
 		gameTeams = append(gameTeams, GameTeam{
 			GameId: generatedId,
 			TeamId: awayTeamId,
@@ -139,18 +155,22 @@ func jhowell() {
 	}
 	ioutil.WriteFile("./jhowellMappings.json", jsonString, 0644)
 
+	DeleteJHowell(db)
+	BeginTransaction(db)
 	for _, team := range teams {
 		log.Println(team)
+		// False here as we don't want to overwrite logo data from ESPN
 		InsertTeam(db, team, false)
 	}
 	for _, game := range games {
 		log.Println(game)
-		InsertGame(db, game, false)
+		InsertGame(db, game, true)
 	}
 	for _, gameTeam := range gameTeams {
 		log.Println(gameTeam)
-		InsertGameTeam(db, gameTeam, false)
+		InsertGameTeam(db, gameTeam, true)
 	}
+	Commit(db)
 }
 
 // espn team ids range from 2 to 3200
@@ -206,7 +226,7 @@ func matchTeamStringToId(db *sqlx.DB, input string, nameMap map[string]int64) in
 			log.Fatal(err)
 		}
 		nameMap[input] = team
-		log.Println(input, team, displayName)
+		// log.Println(input, team, displayName)
 		return team
 	}
 	return generateTeamId(input)

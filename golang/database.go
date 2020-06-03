@@ -36,6 +36,13 @@ func Commit(db *sqlx.DB) {
 	}
 }
 
+func DeleteJHowell(db *sqlx.DB) {
+	_, err := db.Exec("DELETE FROM game where source = 'jh'; DELETE FROM gameteam where gameid not IN (SELECT id from game);");
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func InsertGame(db *sqlx.DB, game Game, replace bool) {
 	query := `INSERT OR IGNORE INTO game VALUES ($1, $2, $3, $4)`
 	if replace {

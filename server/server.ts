@@ -29,6 +29,7 @@ init();
 
 async function updateTasks() {
   updateDB();
+  await computeStreaks();
   await computeCounts();
   await computeRankings();
   uploadDB();
@@ -89,14 +90,32 @@ var schema = buildSchema(`
     result: String
     rating: Float
   }
+
+  type Streak {
+    id: String
+    logo: String
+    displayName: String
+    current: Int
+    allTime: Int
+  }
+
+  type TeamRivalry {
+    id: String
+    logo: String
+    displayName: String
+    gamesPlayed: Int
+    gamesWon: Int
+  }
   
   type Query {
     getTeam(teamId: String): Team
     listTeam(limit: Int): [Team]
     listTeamGame(teamId: String, limit: Int): [TeamGame]
+    listTeamRivalry(teamId: String): [TeamRivalry]
     listGame(limit: Int): [Game]
     listRankingTeam(limit: Int): [RankingTeam]
     listRatingHistory(teamId: String): [RatingHistory]
+    listStreak(type: String): [Streak]
   }
 `);
 
@@ -161,6 +180,31 @@ var root = {
       },
     }));
     return final;
+  },
+  listTeamRivalry: async ({ teamId }: { teamId: string }) => {
+    const data = await db.all(
+      `
+      SELECT id, logo, displayname as "displayName", count(1) gamesPlayed, sum(case when gameteam.result = 'W' then 1 else 0 end) gamesWon
+      from gameteam
+      join gameteam gt2 on gameteam.gameid = gt2.gameid and gameteam.teamid != gt2.teamid
+      left join team on gt2.teamid = team.id
+      where gameteam.teamid = ?
+      group by id, logo, displayName
+      order by gamesPlayed desc
+    `,
+      [teamId]
+    );
+    return data;
+  },
+  listStreak: async ({ type }: { type: string }) => {
+    const data = await db.all(`
+    SELECT team.id, team.logo, team.displayname as "displayName", current, allTime
+    FROM team
+    LEFT JOIN team_streak on team.id = team_streak.id
+    ORDER BY ${type === 'allTime' ? 'allTime' : 'current'} desc
+    limit 100
+    `);
+    return data;
   },
   listGame: async ({ limit }: { limit: number }) => {
     const data = await db.all(
@@ -244,10 +288,8 @@ app.use(
 app.use(express.static('build'));
 // TODO more features
 // - circles of parity (longest cycle in directed graph problem)
-// - all time win streaks
-// - active win streaks
 // - margins of victory
-// - rivalry games
+// - dedicated rivalry pages
 
 function downloadDB() {
   if (!process.env.ENABLE_GH_DB_SYNC) {
@@ -368,20 +410,48 @@ async function computeCounts() {
   await db.run('COMMIT');
 }
 
+async function computeStreaks() {
+  const data = await db.all(`SELECT date, result, teamid from gameteam
+  join game on game.id = gameteam.gameid
+  order by date desc`);
+  let runningMap: NumberDict = {};
+  let currentStreakMap: NumberDict = {};
+  let allTimeStreakMap: NumberDict = {};
+  data.forEach((row: any) => {
+    if (!runningMap[row.teamid]) {
+      runningMap[row.teamid] = 0;
+    }
+    if (row.result === 'W') {
+      runningMap[row.teamid] += 1;
+    } else {
+      // Copy the data to current streak if we haven't done it already
+      if (!(row.teamid in currentStreakMap)) {
+        currentStreakMap[row.teamid] = runningMap[row.teamid];
+      }
+      // Copy the data to all time streak if it's better
+      if ((allTimeStreakMap[row.teamid] || 0) <= runningMap[row.teamid]) {
+        allTimeStreakMap[row.teamid] = runningMap[row.teamid];
+      }
+      runningMap[row.teamid] = 0;
+    }
+  });
+  console.log(currentStreakMap, allTimeStreakMap);
+  // Write data to SQL
+  await db.run('BEGIN TRANSACTION');
+  await db.run('DELETE FROM team_streak');
+  const keys = Object.keys(currentStreakMap);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    await db.run(
+      'INSERT INTO team_streak (id, current, allTime) VALUES (?, ?, ?)',
+      [key, currentStreakMap[key], allTimeStreakMap[key]]
+    );
+  }
+  await db.run('COMMIT');
+}
+
 /*
-function GetRivalries(db *sqlx.DB, teamId int64, teamId2 int64) []Team {
-	return nil
-}
-
-function GetCurrentWinStreaks() {
-
-}
-
-function GetLongestWinStreaks() {
-
-}
-
-function GetMarginsOfVictory() {
+function getMarginsOfVictory() {
 
 }
 
