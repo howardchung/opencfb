@@ -29,6 +29,7 @@ init();
 
 async function updateTasks() {
   updateDB();
+  await replaceHttp();
   await computeStreaks();
   await computeCounts();
   await computeRankings();
@@ -286,6 +287,10 @@ app.use(
 );
 // serve static client files
 app.use(express.static('build'));
+// Send index.html for all other requests (SPA)
+app.use('/*', (req, res) => {
+  res.sendFile(__dirname + '/build/public/index.html');
+});
 // TODO more features
 // - circles of parity (longest cycle in directed graph problem)
 // - margins of victory
@@ -313,6 +318,10 @@ function updateDB() {
     },
     stdio: 'inherit',
   });
+}
+
+async function replaceHttp() {
+  await db.exec(`UPDATE team SET logo = replace(logo, 'http://', 'https://')`);
 }
 
 async function computeRankings() {
@@ -435,7 +444,7 @@ async function computeStreaks() {
       runningMap[row.teamid] = 0;
     }
   });
-  console.log(currentStreakMap, allTimeStreakMap);
+  // console.log(currentStreakMap, allTimeStreakMap);
   // Write data to SQL
   await db.run('BEGIN TRANSACTION');
   await db.run('DELETE FROM team_streak');
