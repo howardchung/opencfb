@@ -23,10 +23,6 @@ An open source project for exploring American college football data.
 
 - The application expects a SQLite database in a `opencfb-data` directory.
 
-# Auto-syncing data to GitHub
-
-- Setting `GH_ACCESS_TOKEN` and `ENABLE_GH_DB_SYNC` allows the application to pull and write data back to a GitHub repo.
-
 # Tech
 
 - React

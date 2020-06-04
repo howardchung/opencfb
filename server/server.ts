@@ -84,6 +84,8 @@ var schema = buildSchema(`
     rating: Float
     gamesPlayed: Int
     gamesWon: Int
+    gamesLost: Int
+    gamesTied: Int
   }
 
   type RatingHistory {
@@ -106,6 +108,13 @@ var schema = buildSchema(`
     displayName: String
     gamesPlayed: Int
     gamesWon: Int
+    gamesLost: Int
+    gamesTied: Int
+  }
+
+  type TeamRankingHistory {
+    year: Int
+    rank: Int
   }
   
   type Query {
@@ -113,9 +122,10 @@ var schema = buildSchema(`
     listTeam(limit: Int): [Team]
     listTeamGame(teamId: String, limit: Int): [TeamGame]
     listTeamRivalry(teamId: String): [TeamRivalry]
+    listTeamRatingHistory(teamId: String): [RatingHistory]
+    listTeamRankingHistory(teamId: String): [TeamRankingHistory]
     listGame(limit: Int): [Game]
     listRankingTeam(limit: Int): [RankingTeam]
-    listRatingHistory(teamId: String): [RatingHistory]
     listStreak(type: String): [Streak]
   }
 `);
@@ -185,13 +195,29 @@ var root = {
   listTeamRivalry: async ({ teamId }: { teamId: string }) => {
     const data = await db.all(
       `
-      SELECT id, logo, displayname as "displayName", count(1) gamesPlayed, sum(case when gameteam.result = 'W' then 1 else 0 end) gamesWon
+      SELECT id, logo, displayname as "displayName",
+      count(1) gamesPlayed,
+      sum(case when gameteam.result = 'W' then 1 else 0 end) gamesWon,
+      sum(case when gameteam.result = 'L' then 1 else 0 end) gamesLost,
+      sum(case when gameteam.result = 'T' then 1 else 0 end) gamesTied
       from gameteam
       join gameteam gt2 on gameteam.gameid = gt2.gameid and gameteam.teamid != gt2.teamid
       left join team on gt2.teamid = team.id
       where gameteam.teamid = ?
       group by id, logo, displayName
       order by gamesPlayed desc
+    `,
+      [teamId]
+    );
+    return data;
+  },
+  listTeamRankingHistory: async ({ teamId }: { teamId: string }) => {
+    const data = await db.all(
+      `
+      SELECT year, rank
+      from team_ranking_history
+      where id = ?
+      order by year asc
     `,
       [teamId]
     );
@@ -250,17 +276,17 @@ var root = {
   },
   listRankingTeam: async ({ limit }: { limit: number }) => {
     const data = await db.all(
-      `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon
+      `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
       FROM team_ranking
       left join team on team_ranking.id = team.id
       left join team_count on team.id = team_count.id
-      where team.displayName NOT LIKE '%(non-IA)'
+      --where team.displayName NOT LIKE '%(non-IA)'
       order by rating desc limit ?`,
       [limit]
     );
     return data;
   },
-  listRatingHistory: async ({ teamId }: { teamId: string }) => {
+  listTeamRatingHistory: async ({ teamId }: { teamId: string }) => {
     const data = await db.all(
       `SELECT date, result, cast(rating as int) as rating
       from game
@@ -297,20 +323,23 @@ app.use('/*', (req, res) => {
 // - dedicated rivalry pages
 
 function downloadDB() {
-  if (!process.env.ENABLE_GH_DB_SYNC) {
+  if (!process.env.ENABLE_GH_DB_DOWNLOAD) {
     return;
   }
   execSync('bash ./scripts/download.sh');
 }
 
 function uploadDB() {
-  if (!process.env.ENABLE_GH_DB_SYNC) {
+  if (!process.env.ENABLE_GH_DB_UPLOAD) {
     return;
   }
   execSync('bash ./scripts/upload.sh');
 }
 
 function updateDB() {
+  if (!process.env.ENABLE_DATA_INGEST) {
+    return;
+  }
   execFileSync('./golang/opencfb', {
     env: {
       SVC: 'espn',
@@ -333,7 +362,7 @@ async function computeRankings() {
 
   // Get an array of all teams
   const data = await db.all(
-    `SELECT game.id, gt.teamid as team1, gt2.teamid as team2, gt.result as team1result
+    `SELECT game.id, game.date, gt.teamid as team1, gt2.teamid as team2, gt.result as team1result
     FROM game
     join gameteam gt on game.id = gt.gameid
     join gameteam gt2 on gt2.gameid = gt.gameid and gt2.teamid != gt.teamid
@@ -345,9 +374,43 @@ async function computeRankings() {
     order by game.date asc`
   );
 
+  let currYear = 0;
   await db.run('BEGIN TRANSACTION');
+  await db.run('DELETE FROM team_ranking_history');
   for (let i = 0; i < data.length; i++) {
     const game = data[i];
+
+    // If we encounter a new year after february
+    // Snapshot the current team relative ranks
+    const date = new Date(game.date);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    // 0 is january
+    if ((year > currYear && month >= 1) || i === data.length - 1) {
+      console.log(year);
+      currYear = year;
+      let snapshot = Object.keys(ratingMap).map((teamId) => {
+        return {
+          teamId,
+          rating: ratingMap[teamId],
+          year: currYear - 1,
+          rank: 0,
+        };
+      });
+      snapshot.sort((a, b) => b.rating - a.rating);
+      // Add ranks
+      snapshot = snapshot.map((row, i) => ({ ...row, rank: i + 1 }));
+      // Write to DB
+      for (let i = 0; i < snapshot.length; i++) {
+        const row = snapshot[i];
+        // console.log(row);
+        await db.run(
+          `INSERT INTO team_ranking_history (id, year, rank) VALUES (?, ?, ?)`,
+          [row.teamId, row.year, row.rank]
+        );
+      }
+    }
+
     let team1 = game.team1;
     let team2 = game.team2;
     let team1Result = game.team1result;
