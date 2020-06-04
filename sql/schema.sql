@@ -49,6 +49,13 @@ CREATE TABLE IF NOT EXISTS team_streak (
   allTime int
 );
 
+CREATE TABLE IF NOT EXISTS team_ranking_history (
+  id bigint REFERENCES team(id),
+  year int,
+  rank int,
+  PRIMARY KEY (id, year)
+);
+
 CREATE TABLE IF NOT EXISTS game_elo_delta (
   id bigint REFERENCES game(id) PRIMARY KEY,
   delta real

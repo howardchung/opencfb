@@ -292,6 +292,8 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => (
           displayName
           gamesPlayed
           gamesWon
+          gamesLost
+          gamesTied
         }
       }
     `}
@@ -311,6 +313,7 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => (
                 <TableCell />
                 <TableCell align="left">Opponent</TableCell>
                 <TableCell align="right">Games Played</TableCell>
+                <TableCell align="right">WLT</TableCell>
                 <TableCell align="right">Win %</TableCell>
               </TableRow>
             </TableHead>
@@ -329,6 +332,13 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => (
                     </Link>
                   </TableCell>
                   <TableCell align="right">{row.gamesPlayed}</TableCell>
+                  <TableCell align="right">
+                    <span style={{ color: 'green' }}>{row.gamesWon}</span>
+                    {' - '}
+                    <span style={{ color: 'red' }}>{row.gamesLost}</span>
+                    {' - '}
+                    <span style={{ color: 'gray' }}>{row.gamesTied}</span>
+                  </TableCell>
                   <TableCell align="right">
                     {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + '%'}
                   </TableCell>
@@ -468,11 +478,11 @@ const Teams = () => (
   </Query>
 );
 
-const Rankings = () => (
+const Rankings = ({ limit }: { limit: number }) => (
   <Query
     query={gql`
-      {
-        listRankingTeam(limit: 500) {
+      query ListRankingTeam($limit: Int) {
+        listRankingTeam(limit: $limit) {
           id
           logo
           abbreviation
@@ -480,9 +490,12 @@ const Rankings = () => (
           rating
           gamesPlayed
           gamesWon
+          gamesLost
+          gamesTied
         }
       }
     `}
+    variables={{ limit }}
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
@@ -500,8 +513,7 @@ const Rankings = () => (
                 <TableCell />
                 <TableCell align="left">Name</TableCell>
                 <TableCell align="right">Rating</TableCell>
-                <TableCell align="right">Games Played</TableCell>
-                <TableCell align="right">Win %</TableCell>
+                <TableCell align="right">WLT</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -522,9 +534,12 @@ const Rankings = () => (
                     </div>
                   </TableCell>
                   <TableCell align="right">{Math.floor(row.rating)}</TableCell>
-                  <TableCell align="right">{row.gamesPlayed}</TableCell>
                   <TableCell align="right">
-                    {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + '%'}
+                    <span style={{ color: 'green' }}>{row.gamesWon}</span>
+                    {' - '}
+                    <span style={{ color: 'red' }}>{row.gamesLost}</span>
+                    {' - '}
+                    <span style={{ color: 'gray' }}>{row.gamesTied}</span>
                   </TableCell>
                 </TableRow>
               ))}
@@ -649,7 +664,7 @@ const Home = () => (
         </Typography>
       </li>
     </ul>
-    <Rankings />
+    <Rankings limit={250} />
   </div>
 );
 
@@ -664,18 +679,18 @@ const TeamPage = ({ teamId }: { teamId: string }) => {
     <div>
       <Team teamId={teamId} />
       <RatingGraph teamId={teamId} />
-      <Paper square>
-        <Tabs value={value} onChange={handleChange}>
-          <Tab label="Games" />
-          <Tab label="Rivalries" />
-        </Tabs>
-        <TabPanel value={value} index={0}>
-          <TeamGames teamId={teamId} />
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          <TeamRivalry teamId={teamId} />
-        </TabPanel>
-      </Paper>
+      <RankingHistoryGraph teamId={teamId} />
+      {/* <ComboGraph teamId={teamId} /> */}
+      <Tabs value={value} onChange={handleChange}>
+        <Tab label="Games" />
+        <Tab label="Rivalries" />
+      </Tabs>
+      <TabPanel value={value} index={0}>
+        <TeamGames teamId={teamId} />
+      </TabPanel>
+      <TabPanel value={value} index={1}>
+        <TeamRivalry teamId={teamId} />
+      </TabPanel>
     </div>
   );
 };
@@ -709,8 +724,8 @@ function TabPanel(props: TabPanelProps) {
 const RatingGraph = ({ teamId }: { teamId: string }) => (
   <Query
     query={gql`
-      query ListRatingHistory($teamId: String!) {
-        listRatingHistory(teamId: $teamId) {
+      query ListTeamRatingHistory($teamId: String!) {
+        listTeamRatingHistory(teamId: $teamId) {
           date
           result
           rating
@@ -724,31 +739,158 @@ const RatingGraph = ({ teamId }: { teamId: string }) => (
       if (loading) return <p>Loading...</p>;
       if (error) return <p>Error :(</p>;
 
-      const graphData = data.listRatingHistory;
+      const graphData = data.listTeamRatingHistory;
       return (
-        <ResponsiveContainer width={'100%'} height={300}>
-          <LineChart
-            data={graphData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              tickFormatter={(val) => new Date(val).getFullYear()}
-            />
-            <YAxis />
-            <Tooltip
-              labelFormatter={(label) => new Date(label).toLocaleDateString()}
-              formatter={(value, name, props) => [value]}
-            />
-            <Line
-              dot={false}
-              type="monotone"
-              dataKey="rating"
-              stroke="#8884d8"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <React.Fragment>
+          <Typography variant="button">Rating History</Typography>
+          <ResponsiveContainer width={'100%'} height={300}>
+            <LineChart data={graphData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(val) => new Date(val).getFullYear()}
+              />
+              <YAxis />
+              <Tooltip
+                labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                formatter={(value, name, props) => [value]}
+              />
+              <Line
+                dot={false}
+                type="monotone"
+                dataKey="rating"
+                stroke="#8884d8"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </React.Fragment>
+      );
+    }}
+  </Query>
+);
+
+const RankingHistoryGraph = ({ teamId }: { teamId: string }) => (
+  <Query
+    query={gql`
+      query ListTeamRankingHistory($teamId: String!) {
+        listTeamRankingHistory(teamId: $teamId) {
+          year
+          rank
+        }
+      }
+    `}
+    variables={{ teamId }}
+  >
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      const graphData = data.listTeamRankingHistory;
+      return (
+        <React.Fragment>
+          <Typography variant="button">Rank History</Typography>
+          <ResponsiveContainer width={'100%'} height={300}>
+            <LineChart data={graphData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis reversed />
+              <Tooltip
+              // labelFormatter={(label) => new Date(label).toLocaleDateString()}
+              // formatter={(value, name, props) => [value]}
+              />
+              <Line
+                dot={false}
+                type="monotone"
+                dataKey="rank"
+                stroke="#8884d8"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </React.Fragment>
+      );
+    }}
+  </Query>
+);
+
+const ComboGraph = ({ teamId }: { teamId: string }) => (
+  <Query
+    query={gql`
+      query ListCombo($teamId: String!) {
+        listTeamRatingHistory(teamId: $teamId) {
+          date
+          result
+          rating
+        }
+        listTeamRankingHistory(teamId: $teamId) {
+          year
+          rank
+        }
+      }
+    `}
+    variables={{ teamId }}
+  >
+    {(result: QueryResult) => {
+      const { loading, error, data } = result;
+      if (loading) return <p>Loading...</p>;
+      if (error) return <p>Error :(</p>;
+
+      const graphData = data.listTeamRatingHistory.map((row: any) => ({
+        ...row,
+        date: Number(new Date(row.date)),
+      }));
+      const graphData2 = data.listTeamRankingHistory.map((row: any) => ({
+        ...row,
+        date: Number(new Date(row.year + '-01-01')),
+      }));
+      console.log(graphData[0], graphData2[0]);
+      return (
+        <React.Fragment>
+          <Typography variant="button">Rating/Rank History</Typography>
+          <ResponsiveContainer width={'100%'} height={300}>
+            <LineChart
+            //data={graphData}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                type="number"
+                tickFormatter={(val) => new Date(val).getFullYear()}
+              />
+              <YAxis yAxisId="left" />
+              <YAxis
+                yAxisId="right"
+                dataKey="rank"
+                orientation="right"
+                reversed
+              />
+              <Tooltip
+                labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                // formatter={(value, name, props) => [value]}
+              />
+              <Line
+                dot={false}
+                data={graphData}
+                type="monotone"
+                dataKey="rating"
+                stroke="#8884d8"
+                name="Rating"
+                key="rating"
+                yAxisId="left"
+              />
+              <Line
+                dot
+                data={graphData2}
+                type="monotone"
+                dataKey="rank"
+                stroke="#8884d8"
+                name="Rank"
+                key="rank"
+                yAxisId="right"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </React.Fragment>
       );
     }}
   </Query>
@@ -847,7 +989,10 @@ class App extends Component {
                   <GamePage gameId={match.params.gameId} />
                 )}
               /> */}
-              <Route path="/rankings" render={({ match }) => <Rankings />} />
+              <Route
+                path="/rankings"
+                render={({ match }) => <Rankings limit={2000} />}
+              />
               <Route
                 path="/streaks"
                 render={({ match }) => (
