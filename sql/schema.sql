@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS team_ranking_history (
   id bigint REFERENCES team(id),
   year int,
   rank int,
+  rating real,
   PRIMARY KEY (id, year)
 );
 

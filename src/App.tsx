@@ -32,6 +32,11 @@ import {
 } from 'recharts';
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
 
 const client = new ApolloClient({
   uri:
@@ -479,11 +484,11 @@ const Teams = () => (
   </Query>
 );
 
-const Rankings = ({ limit }: { limit: number }) => (
+const Rankings = ({ limit, year }: { limit: number; year?: number }) => (
   <Query
     query={gql`
-      query ListRankingTeam($limit: Int) {
-        listRankingTeam(limit: $limit) {
+      query ListRankingTeam($limit: Int, $year: Int) {
+        listRankingTeam(limit: $limit, year: $year) {
           id
           logo
           abbreviation
@@ -496,7 +501,7 @@ const Rankings = ({ limit }: { limit: number }) => (
         }
       }
     `}
-    variables={{ limit }}
+    variables={{ limit, year }}
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
@@ -996,8 +1001,27 @@ class App extends Component {
                 )}
               /> */}
               <Route
-                path="/rankings"
-                render={({ match }) => <Rankings limit={2000} />}
+                path="/rankings/:year?"
+                render={({ match, history }) => (
+                  <React.Fragment>
+                    <Typography variant="button">Rankings</Typography>
+                    <br />
+                    <FormControl>
+                    <InputLabel id="rankings-year-label">Year</InputLabel>
+                    <Select style={{ width: '100px' }} labelId="rankings-year-label" value={match.params.year || ''} onChange={(e) => history.push('/rankings/' + e.target.value)}>
+                      {/* <MenuItem value="">Current</MenuItem> */}
+                      {/* starting year one higher if we're past january */}
+                      {Array.from(
+                        new Array(new Date().getFullYear() - 1869 + 1),
+                        (x, i) => new Date().getFullYear() - (new Date().getMonth() > 0 ? 1 : 2) - i
+                      ).map((year) => (
+                        <MenuItem value={year}>{year}</MenuItem>
+                      ))}
+                    </Select>
+                    </FormControl>
+                    <Rankings limit={2000} year={Number(match.params.year)} />
+                  </React.Fragment>
+                )}
               />
               <Route
                 path="/streaks"
