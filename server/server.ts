@@ -129,7 +129,7 @@ var schema = buildSchema(`
     listTeamRatingHistory(teamId: String): [RatingHistory]
     listTeamRankingHistory(teamId: String): [TeamRankingHistory]
     listGame(limit: Int): [Game]
-    listRankingTeam(limit: Int): [RankingTeam]
+    listRankingTeam(limit: Int, year: Int): [RankingTeam]
     listStreak(type: String): [Streak]
   }
 `);
@@ -278,16 +278,37 @@ var root = {
 
     return final;
   },
-  listRankingTeam: async ({ limit }: { limit: number }) => {
-    const data = await db.all(
-      `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
-      FROM team_ranking
-      left join team on team_ranking.id = team.id
-      left join team_count on team.id = team_count.id
-      --where team.displayName NOT LIKE '%(non-IA)'
-      order by rating desc limit ?`,
-      [limit]
-    );
+  listRankingTeam: async ({
+    limit,
+    year,
+  }: {
+    limit: number;
+    year?: number;
+  }) => {
+    let data = [];
+    if (year) {
+      data = await db.all(
+        `
+      SELECT team_ranking_history.id, team.displayname as "displayName", logo, team_ranking_history.rating
+      FROM team_ranking_history
+      JOIN team on team_ranking_history.id = team.id
+      WHERE year = ?
+      ORDER BY rating desc
+      limit ?
+      `,
+        [year, limit]
+      );
+    } else {
+      data = await db.all(
+        `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
+        FROM team_ranking
+        left join team on team_ranking.id = team.id
+        left join team_count on team.id = team_count.id
+        --where team.displayName NOT LIKE '%(non-IA)'
+        order by rating desc limit ?`,
+        [limit]
+      );
+    }
     return data;
   },
   listTeamRatingHistory: async ({ teamId }: { teamId: string }) => {
@@ -388,21 +409,20 @@ async function computeRankings() {
   await db.run('DELETE FROM team_ranking_history');
   for (let i = 0; i < data.length; i++) {
     const game = data[i];
-
     // If we encounter a new year after february
     // Snapshot the current team relative ranks
     const date = new Date(game.date);
     const year = date.getFullYear();
     const month = date.getMonth();
     // 0 is january
-    if ((year > currYear && month >= 1) || i === data.length - 1) {
+    if (year > currYear && month >= 2) {
       console.log(year);
       currYear = year;
       let snapshot = Object.keys(ratingMap).map((teamId) => {
         return {
           teamId,
           rating: ratingMap[teamId],
-          year: currYear - 1,
+          year: currYear,
           rank: 0,
         };
       });
@@ -414,8 +434,8 @@ async function computeRankings() {
         const row = snapshot[i];
         // console.log(row);
         await db.run(
-          `INSERT INTO team_ranking_history (id, year, rank) VALUES (?, ?, ?)`,
-          [row.teamId, row.year, row.rank]
+          `INSERT INTO team_ranking_history (id, year, rank, rating) VALUES (?, ?, ?, ?)`,
+          [row.teamId, row.year, row.rank, row.rating]
         );
       }
     }
