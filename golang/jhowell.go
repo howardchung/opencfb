@@ -106,7 +106,13 @@ func jhowell() {
 		awayTeamId := matchTeamStringToId(postgresDb, awayString, nameMap)
 
 		// Create a game ID
-		generatedId := generateGameId(homeTeamId, awayTeamId, gameDate)
+		// For these purposes, consider home team to be the smaller value so we don't duplicate
+		smallerId := homeTeamId
+		largerId := awayTeamId
+		if smallerId > largerId {
+			smallerId, largerId = largerId, smallerId
+		}
+		generatedId := generateGameId(smallerId, largerId, gameDate)
 
 		// Check if we already added this game (jhowell data lists every game twice since it's under both schools)
 		exists := gameSet[generatedId]

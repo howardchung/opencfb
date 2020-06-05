@@ -205,6 +205,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
             <TableBody>
               {rows.map((row: any, i: number) => (
                 <TableRow key={row.id}>
+                  {/* <TableCell>{row.id}</TableCell> */}
                   <TableCell align="left">
                     {new Date(row.date).toLocaleDateString()}
                   </TableCell>
@@ -762,7 +763,7 @@ const RatingGraph = ({ teamId }: { teamId: string }) => (
               />
               <Line
                 dot={false}
-                type="monotone"
+                type="natural"
                 dataKey="rating"
                 stroke="#8884d8"
               />
@@ -806,7 +807,7 @@ const RankingHistoryGraph = ({ teamId }: { teamId: string }) => (
               />
               <Line
                 dot={false}
-                type="monotone"
+                type="natural"
                 dataKey="rank"
                 stroke="#8884d8"
               />
