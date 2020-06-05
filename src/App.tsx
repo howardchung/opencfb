@@ -155,7 +155,7 @@ const TeamGames = ({ teamId }: { teamId: string }) => (
   <Query
     query={gql`
       query TeamGames($teamId: String) {
-        listTeamGame(teamId: $teamId, limit: 100) {
+        listTeamGame(teamId: $teamId, limit: 250) {
           id
           date
           score
@@ -663,8 +663,13 @@ const Home = () => (
           1000, and the maximum rating gain/loss for a game is 32.
         </Typography>
       </li>
+      <li>
+        <Typography variant="caption">
+          Games involving a non Division I team aren't rated.
+        </Typography>
+      </li>
     </ul>
-    <Rankings limit={250} />
+    <Rankings limit={500} />
   </div>
 );
 

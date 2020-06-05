@@ -1,3 +1,5 @@
+PRAGMA journal_mode=wal;
+
 CREATE TABLE IF NOT EXISTS game (
   id bigint PRIMARY KEY, 
   attendance bigint, 
