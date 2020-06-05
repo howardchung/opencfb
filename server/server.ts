@@ -14,10 +14,7 @@ let db: Database = (null as unknown) as Database;
 async function init() {
   // Download the DB
   downloadDB();
-  db = await open({
-    filename: './opencfb-data/opencfb.sqlite',
-    driver: sqlite3.Database,
-  });
+  db = await createDBConnection();
   const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
   await db.exec(schema);
   app.listen(process.env.PORT || 5000);
@@ -34,6 +31,13 @@ async function updateTasks() {
   await computeCounts();
   await computeRankings();
   uploadDB();
+}
+
+async function createDBConnection() {
+  return await open({
+    filename: './opencfb-data/opencfb.sqlite',
+    driver: sqlite3.Database,
+  });
 }
 
 // Construct a schema, using GraphQL schema language
@@ -354,13 +358,14 @@ async function replaceHttp() {
 }
 
 async function computeRankings() {
+  const db = await createDBConnection();
   // Elo rank teams
   // Start all teams at 1000
   let ratingMap: NumberDict = {};
   let initial = 1000;
   let kFactor = 32;
 
-  // Get an array of all teams
+  // Get an array of all games
   const data = await db.all(
     `SELECT game.id, game.date, gt.teamid as team1, gt2.teamid as team2, gt.result as team1result
     FROM game
@@ -369,10 +374,14 @@ async function computeRankings() {
     join team t1 on gt.teamid = t1.id
     join team t2 on gt2.teamid = t2.id
     where gt.teamid < gt2.teamid
-    --and t1.displayname NOT LIKE '%(non-IA)'
-    --and t2.displayname NOT LIKE '%(non-IA)'
     order by game.date asc`
   );
+
+  const eligibleTeams = await db.all(`
+  SELECT id from team WHERE displayname NOT LIKE '%(non-IA)'
+  `);
+  const teamSet = new Set([...eligibleTeams.map((row) => row.id)]);
+  //console.log(teamSet);
 
   let currYear = 0;
   await db.run('BEGIN TRANSACTION');
@@ -413,28 +422,7 @@ async function computeRankings() {
 
     let team1 = game.team1;
     let team2 = game.team2;
-    let team1Result = game.team1result;
-    if (!ratingMap[team1]) {
-      ratingMap[team1] = initial;
-    }
-    if (!ratingMap[team2]) {
-      ratingMap[team2] = initial;
-    }
-    const currRating1 = ratingMap[team1];
-    const currRating2 = ratingMap[team2];
-    const r1 = Math.pow(10, currRating1 / 400);
-    const r2 = Math.pow(10, currRating2 / 400);
-    const e1 = r1 / (r1 + r2);
-    const e2 = r2 / (r1 + r2);
-    let diff1 = 0;
-    let diff2 = 0;
-    if (team1Result === 'W') {
-      diff1 = kFactor * (1 - e1);
-      diff2 = kFactor * (0 - e2);
-    } else if (team1Result === 'L') {
-      diff1 = kFactor * (0 - e1);
-      diff2 = kFactor * (1 - e2);
-    }
+
     // Write the current team ratings into the gameteam table (pre-game rating)
     await db.run(
       `UPDATE gameteam SET rating = ? WHERE gameteam.gameid = ? and gameteam.teamid = ?`,
@@ -444,14 +432,41 @@ async function computeRankings() {
       `UPDATE gameteam SET rating = ? WHERE gameteam.gameid = ? and gameteam.teamid = ?`,
       [ratingMap[team2], game.id, team2]
     );
-    ratingMap[team1] += diff1;
-    ratingMap[team2] += diff2;
+
+    let delta = 0;
+    if (teamSet.has(team1) && teamSet.has(team2)) {
+      let team1Result = game.team1result;
+      if (!ratingMap[team1]) {
+        ratingMap[team1] = initial;
+      }
+      if (!ratingMap[team2]) {
+        ratingMap[team2] = initial;
+      }
+      const currRating1 = ratingMap[team1];
+      const currRating2 = ratingMap[team2];
+      const r1 = Math.pow(10, currRating1 / 400);
+      const r2 = Math.pow(10, currRating2 / 400);
+      const e1 = r1 / (r1 + r2);
+      const e2 = r2 / (r1 + r2);
+      let diff1 = 0;
+      let diff2 = 0;
+      if (team1Result === 'W') {
+        diff1 = kFactor * (1 - e1);
+        diff2 = kFactor * (0 - e2);
+      } else if (team1Result === 'L') {
+        diff1 = kFactor * (0 - e1);
+        diff2 = kFactor * (1 - e2);
+      }
+      delta = Math.abs(diff1);
+      ratingMap[team1] += diff1;
+      ratingMap[team2] += diff2;
+    }
     // Don't do anything for ties currently
     // console.log(i, diff1, ratingMap[team1], ratingMap[team2]);
     // Record the delta
     await db.run(
       'INSERT OR REPLACE INTO game_elo_delta (id, delta) VALUES (?, ?)',
-      [game.id, Math.abs(diff1)]
+      [game.id, delta]
     );
   }
 
@@ -468,6 +483,7 @@ async function computeRankings() {
 }
 
 async function computeCounts() {
+  const db = await createDBConnection();
   await db.run('BEGIN TRANSACTION');
   await db.run('DROP TABLE team_count');
   await db.run(`CREATE TABLE team_count AS
@@ -483,6 +499,7 @@ async function computeCounts() {
 }
 
 async function computeStreaks() {
+  const db = await createDBConnection();
   const data = await db.all(`SELECT date, result, teamid from gameteam
   join game on game.id = gameteam.gameid
   order by date desc`);
