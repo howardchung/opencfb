@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS game (
 );
 
 CREATE TABLE IF NOT EXISTS gameteam(
-  gameid bigint REFERENCES game(id), 
+  gameid bigint REFERENCES game(id) ON DELETE CASCADE, 
   teamid bigint, 
   score bigint, 
   field text, 
@@ -33,12 +33,12 @@ CREATE TABLE IF NOT EXISTS conference(
 );
 
 CREATE TABLE IF NOT EXISTS team_ranking (
-  id bigint REFERENCES team(id) PRIMARY KEY,
+  id bigint REFERENCES team(id) ON DELETE CASCADE PRIMARY KEY,
   rating real
 );
 
 CREATE TABLE IF NOT EXISTS team_count (
-  id bigint REFERENCES team(id) PRIMARY KEY,
+  id bigint REFERENCES team(id) ON DELETE CASCADE PRIMARY KEY,
   gamesPlayed int,
   gamesWon int,
   gamesLost int,
@@ -46,13 +46,13 @@ CREATE TABLE IF NOT EXISTS team_count (
 );
 
 CREATE TABLE IF NOT EXISTS team_streak (
-  id bigint REFERENCES team(id) PRIMARY KEY,
+  id bigint REFERENCES team(id) ON DELETE CASCADE PRIMARY KEY,
   current int,
   allTime int
 );
 
 CREATE TABLE IF NOT EXISTS team_ranking_history (
-  id bigint REFERENCES team(id),
+  id bigint REFERENCES team(id) ON DELETE CASCADE,
   year int,
   rank int,
   rating real,
@@ -60,6 +60,6 @@ CREATE TABLE IF NOT EXISTS team_ranking_history (
 );
 
 CREATE TABLE IF NOT EXISTS game_elo_delta (
-  id bigint REFERENCES game(id) PRIMARY KEY,
+  id bigint REFERENCES game(id) ON DELETE CASCADE PRIMARY KEY,
   delta real
 );

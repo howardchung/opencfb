@@ -365,6 +365,13 @@ function updateDB() {
   if (!process.env.ENABLE_DATA_INGEST) {
     return;
   }
+  // execFileSync('./golang/opencfb', {
+  //   env: {
+  //     SVC: 'jhowell',
+  //     DB_PATH: path.resolve('./opencfb-data/opencfb.sqlite'),
+  //   },
+  //   stdio: 'inherit',
+  // });
   execFileSync('./golang/opencfb', {
     env: {
       SVC: 'espn',
