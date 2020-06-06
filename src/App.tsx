@@ -37,6 +37,13 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
+import createHistory from 'history/createBrowserHistory';
+
+export const history = createHistory();
+
+history.listen((location, action) => {
+  window.scrollTo(0, 0);
+});
 
 const client = new ApolloClient({
   uri:
