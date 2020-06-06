@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	// "fmt"
 	"encoding/json"
-	"github.com/jmoiron/sqlx"
+	// "github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"log"
 	"os"
@@ -22,8 +22,6 @@ func jhowell() {
 	}
 	log.SetOutput(os.Stdout)
 	db := InitDatabase()
-	var postgresDb *sqlx.DB
-	// postgresDb := sqlx.MustConnect("postgres", "postgres://postgres:postgres@localhost:5433/postgres?sslmode=disable")
 
 	file, _ := os.Open("./jhowell.csv")
 	defer file.Close()
@@ -102,8 +100,8 @@ func jhowell() {
 			homeField, awayField = awayField, homeField
 		}
 
-		homeTeamId := matchTeamStringToId(postgresDb, homeString, nameMap)
-		awayTeamId := matchTeamStringToId(postgresDb, awayString, nameMap)
+		homeTeamId := matchTeamStringToId(homeString, nameMap)
+		awayTeamId := matchTeamStringToId(awayString, nameMap)
 
 		// Create a game ID
 		// For these purposes, consider home team to be the smaller value so we don't duplicate
@@ -155,11 +153,11 @@ func jhowell() {
 	}
 
 	// Save our map to file
-	jsonString, err := json.MarshalIndent(nameMap, "", "  ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	ioutil.WriteFile("./jhowellMappings.json", jsonString, 0644)
+	// jsonString, err := json.MarshalIndent(nameMap, "", "  ")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// ioutil.WriteFile("./jhowellMappings.json", jsonString, 0644)
 
 	DeleteJHowell(db)
 	BeginTransaction(db)
@@ -205,7 +203,7 @@ func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	return generatedId
 }
 
-func matchTeamStringToId(db *sqlx.DB, input string, nameMap map[string]int64) int64 {
+func matchTeamStringToId(input string, nameMap map[string]int64) int64 {
 	// match these to existing teams if possible
 	// if no match, create a new team ID
 	// skip teams with (non-IA) in the input string
@@ -223,17 +221,17 @@ func matchTeamStringToId(db *sqlx.DB, input string, nameMap map[string]int64) in
 		// Generate an ID
 		return generateTeamId(input)
 	}
-	if db != nil {
-		row := db.QueryRow("SELECT id, displayname from team WHERE id < 2000000000 ORDER BY similarity(displayname, $1) desc limit 1", input)
-		var team int64
-		var displayName string
-		err := row.Scan(&team, &displayName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		nameMap[input] = team
-		// log.Println(input, team, displayName)
-		return team
-	}
+	// if db != nil {
+	// 	row := db.QueryRow("SELECT id, displayname from team WHERE id < 2000000000 ORDER BY similarity(displayname, $1) desc limit 1", input)
+	// 	var team int64
+	// 	var displayName string
+	// 	err := row.Scan(&team, &displayName)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	nameMap[input] = team
+	// 	// log.Println(input, team, displayName)
+	// 	return team
+	// }
 	return generateTeamId(input)
 }
