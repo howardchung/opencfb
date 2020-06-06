@@ -409,37 +409,6 @@ async function computeRankings() {
   await db.run('DELETE FROM team_ranking_history');
   for (let i = 0; i < data.length; i++) {
     const game = data[i];
-    // If we encounter a new year after february
-    // Snapshot the current team relative ranks
-    const date = new Date(game.date);
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    // 0 is january
-    if (year > currYear && month >= 2) {
-      console.log(year);
-      currYear = year;
-      let snapshot = Object.keys(ratingMap).map((teamId) => {
-        return {
-          teamId,
-          rating: ratingMap[teamId],
-          year: currYear,
-          rank: 0,
-        };
-      });
-      snapshot.sort((a, b) => b.rating - a.rating);
-      // Add ranks
-      snapshot = snapshot.map((row, i) => ({ ...row, rank: i + 1 }));
-      // Write to DB
-      for (let i = 0; i < snapshot.length; i++) {
-        const row = snapshot[i];
-        // console.log(row);
-        await db.run(
-          `INSERT INTO team_ranking_history (id, year, rank, rating) VALUES (?, ?, ?, ?)`,
-          [row.teamId, row.year, row.rank, row.rating]
-        );
-      }
-    }
-
     let team1 = game.team1;
     let team2 = game.team2;
 
@@ -488,6 +457,38 @@ async function computeRankings() {
       'INSERT OR REPLACE INTO game_elo_delta (id, delta) VALUES (?, ?)',
       [game.id, delta]
     );
+
+    // If we encounter a new year after february
+    // Snapshot the current team relative ranks
+    const next = data[i + 1];
+    const nextDate = new Date(next?.date);
+    const nextYear = nextDate.getFullYear();
+    const nextMonth = nextDate.getMonth();
+    // 0 is january
+    if (!next || (nextYear > currYear && nextMonth >= 2)) {
+      console.log(currYear);
+      let snapshot = Object.keys(ratingMap).map((teamId) => {
+        return {
+          teamId,
+          rating: ratingMap[teamId],
+          year: currYear,
+          rank: 0,
+        };
+      });
+      snapshot.sort((a, b) => b.rating - a.rating);
+      // Add ranks
+      snapshot = snapshot.map((row, i) => ({ ...row, rank: i + 1 }));
+      // Write to DB
+      for (let i = 0; i < snapshot.length; i++) {
+        const row = snapshot[i];
+        // console.log(row);
+        await db.run(
+          `INSERT INTO team_ranking_history (id, year, rank, rating) VALUES (?, ?, ?, ?)`,
+          [row.teamId, row.year, row.rank, row.rating]
+        );
+      }
+      currYear = nextYear;
+    }
   }
 
   await db.run('DELETE FROM team_ranking');

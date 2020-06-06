@@ -502,6 +502,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => (
       }
     `}
     variables={{ limit, year }}
+    fetchPolicy="no-cache"
   >
     {(result: QueryResult) => {
       const { loading, error, data } = result;
@@ -519,7 +520,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => (
                 <TableCell />
                 <TableCell align="left">Name</TableCell>
                 <TableCell align="right">Rating</TableCell>
-                <TableCell align="right">WLT</TableCell>
+                {!Boolean(year) && <TableCell align="right">WLT</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -540,13 +541,15 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => (
                     </div>
                   </TableCell>
                   <TableCell align="right">{Math.floor(row.rating)}</TableCell>
-                  <TableCell align="right">
-                    <span style={{ color: 'green' }}>{row.gamesWon}</span>
-                    {' - '}
-                    <span style={{ color: 'red' }}>{row.gamesLost}</span>
-                    {' - '}
-                    <span style={{ color: 'gray' }}>{row.gamesTied}</span>
-                  </TableCell>
+                  {!Boolean(year) && (
+                    <TableCell align="right">
+                      <span style={{ color: 'green' }}>{row.gamesWon}</span>
+                      {' - '}
+                      <span style={{ color: 'red' }}>{row.gamesLost}</span>
+                      {' - '}
+                      <span style={{ color: 'gray' }}>{row.gamesTied}</span>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -1007,17 +1010,32 @@ class App extends Component {
                     <Typography variant="button">Rankings</Typography>
                     <br />
                     <FormControl>
-                    <InputLabel id="rankings-year-label">Year</InputLabel>
-                    <Select style={{ width: '100px' }} labelId="rankings-year-label" value={match.params.year || ''} onChange={(e) => history.push('/rankings/' + e.target.value)}>
-                      {/* <MenuItem value="">Current</MenuItem> */}
-                      {/* starting year one higher if we're past january */}
-                      {Array.from(
-                        new Array(new Date().getFullYear() - 1869 + 1),
-                        (x, i) => new Date().getFullYear() - (new Date().getMonth() > 0 ? 1 : 2) - i
-                      ).map((year) => (
-                        <MenuItem value={year}>{year}</MenuItem>
-                      ))}
-                    </Select>
+                      <InputLabel id="rankings-year-label">Year</InputLabel>
+                      <Select
+                        style={{ width: '100px' }}
+                        labelId="rankings-year-label"
+                        value={match.params.year || ''}
+                        onChange={(e) =>
+                          history.push('/rankings/' + e.target.value)
+                        }
+                      >
+                        {/* <MenuItem value="">Current</MenuItem> */}
+                        {/* starting year one higher if we're past january */}
+                        {Array.from(
+                          new Array(
+                            new Date().getFullYear() -
+                              (new Date().getMonth() > 0 ? 0 : 1) -
+                              1869 +
+                              1
+                          ),
+                          (x, i) =>
+                            new Date().getFullYear() -
+                            (new Date().getMonth() > 0 ? 0 : 1) -
+                            i
+                        ).map((year) => (
+                          <MenuItem value={year}>{year}</MenuItem>
+                        ))}
+                      </Select>
                     </FormControl>
                     <Rankings limit={2000} year={Number(match.params.year)} />
                   </React.Fragment>
