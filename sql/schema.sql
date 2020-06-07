@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS team (
 
 CREATE TABLE IF NOT EXISTS conference(
   id bigint PRIMARY KEY, 
-  displayname text
+  displayname text,
+  division text
 );
 
 CREATE TABLE IF NOT EXISTS team_ranking (

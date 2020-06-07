@@ -663,7 +663,7 @@ const Home = () => (
       , and has been used for many different types of games.
     </Typography>
     <Typography>
-      Let's try it with over 75,000 college football games dating back to 1869!
+      Let's try it with over 50,000 college football games dating back to 1869!
     </Typography>
     <br />
     <Typography variant="button">Notes</Typography>
@@ -681,7 +681,7 @@ const Home = () => (
       </li>
       <li>
         <Typography variant="caption">
-          Games involving a non Division I team aren't rated.
+          Games involving a non-FBS team (or historical equivalent) aren't rated.
         </Typography>
       </li>
     </ul>

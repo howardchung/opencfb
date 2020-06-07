@@ -13,25 +13,6 @@ import (
 func espn() {
 	db := InitDatabase()
 	BeginTransaction(db);
-
-	/*
-		var conferences Conferences
-		// TODO get conferences
-		// Team conference affiliation (insert into conference table)
-		// http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
-		confData, err := http.Get("http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full")
-		if err != nil {
-			panic(err.Error())
-		}
-		confBody, err := ioutil.ReadAll(confData.Body)
-		if err != nil {
-			panic(err.Error())
-		}
-		err = json.Unmarshal([]byte(body), &conferences)
-		for _, conference := range conferences {
-
-		}
-	*/
 	// Can start at 2001 (ESPN has data this far)
 	year, _, _ := time.Now().Date()
 	startAt := year - 1
@@ -155,8 +136,3 @@ func getScoreboard(url string) Scoreboard {
 	// }
 	return scoreboard
 }
-
-// Team details
-// http://cdn.espn.com/core/college-football/team/_/id/2116/ucf-knights?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
-// List of teams
-// http://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?groups=80&lang=en&region=us&contentorigin=espn&tz=America%2FNew_York&limit=200

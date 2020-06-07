@@ -9,6 +9,7 @@ import compression from 'compression';
 import fs from 'fs';
 import { execFileSync, execSync } from 'child_process';
 import path from 'path';
+import axios from 'axios';
 
 let db: Database = (null as unknown) as Database;
 async function init() {
@@ -25,7 +26,7 @@ async function init() {
 init();
 
 async function updateTasks() {
-  updateDB();
+  await updateDB();
   await replaceHttp();
   await computeStreaks();
   await computeCounts();
@@ -231,7 +232,9 @@ var root = {
     const data = await db.all(`
     SELECT team.id, team.logo, team.displayname as "displayName", current, allTime
     FROM team
+    JOIN conference on team.conferenceid = conference.id
     LEFT JOIN team_streak on team.id = team_streak.id
+    WHERE conference.division = 'fbs'
     ORDER BY ${type === 'allTime' ? 'allTime' : 'current'} desc
     limit 100
     `);
@@ -304,7 +307,6 @@ var root = {
         FROM team_ranking
         left join team on team_ranking.id = team.id
         left join team_count on team.id = team_count.id
-        --where team.displayName NOT LIKE '%(non-IA)'
         order by rating desc limit ?`,
         [limit]
       );
@@ -342,10 +344,6 @@ app.use(express.static('build'));
 app.use('/*', (req, res) => {
   res.sendFile(path.resolve(__dirname + '/../build/index.html'));
 });
-// TODO more features
-// - circles of parity (longest cycle in directed graph problem)
-// - margins of victory
-// - dedicated rivalry pages
 
 function downloadDB() {
   if (!process.env.ENABLE_GH_DB_DOWNLOAD) {
@@ -361,7 +359,7 @@ function uploadDB() {
   execSync('bash ./scripts/upload.sh');
 }
 
-function updateDB() {
+async function updateDB() {
   if (!process.env.ENABLE_DATA_INGEST) {
     return;
   }
@@ -379,6 +377,46 @@ function updateDB() {
     },
     stdio: 'inherit',
   });
+   
+  // List of teams
+  // Treat these as updates only, as we insert teams when we fetch game data
+  // Coverage for FBS teams is pretty good already, so skip it
+  // const response = await axios.get('http://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?groups=80&lang=en&region=us&contentorigin=espn&tz=America%2FNew_York&limit=200');
+  // const fbsTeams = response.data;
+  // const response2 = await axios.get('http://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?groups=81&lang=en&region=us&contentorigin=espn&tz=America%2FNew_York&limit=200');
+  // const fcsTeams = response2.data?.sports?.[0]?.leagues?.[0]?.teams;
+  // for (let i = 0; i < fcsTeams.length; i++) {
+  //   const team = fcsTeams[i].team;
+  //   await db.run('UPDATE team SET displayname = ?, abbreviation = ?, color = ?, alternatecolor = ?, logo = ? WHERE id = ?',
+  //   [team.displayName, team.abbreviation, team.color, team.alternateColor, team.logos?.[0]?.href, team.id]);
+  // }
+
+  // List of conferences
+  const response3 = await axios.get('https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc');
+  const fbsConferences = response3.data?.children;
+  for (let i = 0; i < fbsConferences.length; i++) {
+    const conf = fbsConferences[i];
+    console.log(conf);
+    await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`, [conf.id, conf.name, 'fbs']);
+  }
+  const response4 = await axios.get('https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc');
+  const fcsConferences =  response4.data?.children;
+  for (let i = 0; i < fcsConferences.length; i++) {
+    const conf = fcsConferences[i];
+    console.log(conf);
+    // Make an exception for the Ivy League for historical reasons
+    const division = conf.id === '22' ? 'fbs' : 'fcs';
+    await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`, [conf.id, conf.name, division]);
+  }
+  // Add conferenceid 0, a catch-all for old FBS/IA teams without espn records
+  await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (FBS)', 'fbs')`);
+  await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`);
+
+  // Team details
+  // http://cdn.espn.com/core/college-football/team/_/id/2116/ucf-knights?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
+  // List of conferences (FBS only)
+  // http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
+  
 }
 
 async function replaceHttp() {
@@ -406,7 +444,9 @@ async function computeRankings() {
   );
 
   const eligibleTeams = await db.all(`
-  SELECT id from team WHERE displayname NOT LIKE '%(non-IA)'
+  SELECT team.id from team
+  JOIN conference ON team.conferenceid = conference.id
+  where conference.division = 'fbs'
   `);
   const teamSet = new Set([...eligibleTeams.map((row) => row.id)]);
   //console.log(teamSet);
@@ -567,6 +607,10 @@ async function computeStreaks() {
   await db.run('COMMIT');
 }
 
+// TODO more features
+// - circles of parity (longest cycle in directed graph problem)
+// - margins of victory
+// - dedicated rivalry pages
 /*
 function getMarginsOfVictory() {
 
