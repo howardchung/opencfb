@@ -92,12 +92,23 @@ func jhowell() {
 			homeField = "home"
 			awayField = "away"
 		}
+
+		homeConferenceId := int64(2147483647)
+		if (strings.HasSuffix(homeString, "(non-IA)")) {
+			homeConferenceId = 2147483646
+		}
+		awayConferenceId := int64(2147483647)
+		if (strings.HasSuffix(awayString, "(non-IA)")) {
+			awayConferenceId = 2147483646
+		}
+
 		if strings.HasPrefix(s[3], "@") {
 			// swap everything since first team is away
 			homeString, awayString = awayString, homeString
 			homeScore, awayScore = awayScore, homeScore
 			homeResult, awayResult = awayResult, homeResult
 			homeField, awayField = awayField, homeField
+			homeConferenceId, awayConferenceId = awayConferenceId, homeConferenceId
 		}
 
 		homeTeamId := matchTeamStringToId(homeString, nameMap)
@@ -145,10 +156,12 @@ func jhowell() {
 		teams = append(teams, Team{
 			Id:          homeTeamId,
 			DisplayName: homeString,
+			ConferenceId: homeConferenceId,
 		})
 		teams = append(teams, Team{
 			Id:          awayTeamId,
 			DisplayName: awayString,
+			ConferenceId: awayConferenceId,
 		})
 	}
 
