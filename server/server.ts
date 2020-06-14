@@ -7,7 +7,7 @@ import { open, Database } from 'sqlite';
 import cors from 'cors';
 import compression from 'compression';
 import fs from 'fs';
-import { execFileSync, execSync } from 'child_process';
+import { execFile, execSync, exec } from 'child_process';
 import path from 'path';
 import axios from 'axios';
 
@@ -356,28 +356,20 @@ function uploadDB() {
   if (!process.env.ENABLE_GH_DB_UPLOAD) {
     return;
   }
-  execSync('bash ./scripts/upload.sh');
+  exec('bash ./scripts/upload.sh');
 }
 
 async function updateDB() {
   if (!process.env.ENABLE_DATA_INGEST) {
     return;
   }
-  // execFileSync('./golang/opencfb', {
-  //   env: {
-  //     SVC: 'jhowell',
-  //     DB_PATH: path.resolve('./opencfb-data/opencfb.sqlite'),
-  //   },
-  //   stdio: 'inherit',
-  // });
-  execFileSync('./golang/opencfb', {
+  const output = await execPromise('./golang/opencfb', [], {
     env: {
       SVC: 'espn',
       DB_PATH: path.resolve('./opencfb-data/opencfb.sqlite'),
     },
-    stdio: 'inherit',
   });
-   
+  console.log(output);
   // List of teams
   // Treat these as updates only, as we insert teams when we fetch game data
   // Coverage for FBS teams is pretty good already, so skip it
@@ -392,31 +384,57 @@ async function updateDB() {
   // }
 
   // List of conferences
-  const response3 = await axios.get('https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc');
+  const response3 = await axios.get(
+    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc'
+  );
   const fbsConferences = response3.data?.children;
   for (let i = 0; i < fbsConferences.length; i++) {
     const conf = fbsConferences[i];
-    console.log(conf);
-    await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`, [conf.id, conf.name, 'fbs']);
+    // console.log(conf);
+    await db.run(
+      `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
+      [conf.id, conf.name, 'fbs']
+    );
   }
-  const response4 = await axios.get('https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc');
-  const fcsConferences =  response4.data?.children;
+  const response4 = await axios.get(
+    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc'
+  );
+  const fcsConferences = response4.data?.children;
   for (let i = 0; i < fcsConferences.length; i++) {
     const conf = fcsConferences[i];
-    console.log(conf);
+    // console.log(conf);
     // Make an exception for the Ivy League for historical reasons
     const division = conf.id === '22' ? 'fbs' : 'fcs';
-    await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`, [conf.id, conf.name, division]);
+    await db.run(
+      `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
+      [conf.id, conf.name, division]
+    );
   }
   // Add conferenceid 0, a catch-all for old FBS/IA teams without espn records
-  await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (FBS)', 'fbs')`);
-  await db.run(`INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`);
+  await db.run(
+    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (FBS)', 'fbs')`
+  );
+  await db.run(
+    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`
+  );
 
   // Team details
   // http://cdn.espn.com/core/college-football/team/_/id/2116/ucf-knights?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
   // List of conferences (FBS only)
   // http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
-  
+}
+
+function execPromise(command: string, args: string[], options: any) {
+  return new Promise(function (resolve, reject) {
+    execFile(command, args, options, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      console.error(stderr);
+      resolve(stdout);
+    });
+  });
 }
 
 async function replaceHttp() {

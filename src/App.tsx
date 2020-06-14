@@ -681,7 +681,8 @@ const Home = () => (
       </li>
       <li>
         <Typography variant="caption">
-          Games involving a non-FBS team (or historical equivalent) aren't rated.
+          Games involving a non-FBS team (or historical equivalent) aren't
+          rated.
         </Typography>
       </li>
     </ul>
