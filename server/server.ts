@@ -601,7 +601,7 @@ async function computeStreaks() {
     } else {
       // Copy the data to current streak if we haven't done it already
       // Limit to streaks starting in 2000 to remove some old invalid teams
-      if (!(row.teamid in currentStreakMap) && new Date(row.date).getFullYear() >= 2000 && runningMap[row.teamid] > 0) {
+      if (!(row.teamid in currentStreakMap) && new Date(row.date).getFullYear() >= 2000) {
         currentStreakMap[row.teamid] = runningMap[row.teamid];
       }
       // Copy the data to all time streak if it's better
