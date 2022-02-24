@@ -296,6 +296,7 @@ var root = {
       FROM team_ranking_history
       JOIN team on team_ranking_history.id = team.id
       WHERE year = ?
+      AND logo IS NOT NULL
       ORDER BY rating desc
       limit ?
       `,
@@ -305,6 +306,7 @@ var root = {
       data = await db.all(
         `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
         FROM team_ranking
+        WHERE logo IS NOT NULL
         left join team on team_ranking.id = team.id
         left join team_count on team.id = team_count.id
         order by rating desc limit ?`,
