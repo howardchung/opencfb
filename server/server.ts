@@ -297,6 +297,7 @@ var root = {
       JOIN team on team_ranking_history.id = team.id
       WHERE year = ?
       AND logo IS NOT NULL
+      AND logo != ''
       ORDER BY rating desc
       limit ?
       `,
@@ -309,6 +310,7 @@ var root = {
         left join team on team_ranking.id = team.id
         left join team_count on team.id = team_count.id
         WHERE logo IS NOT NULL
+        AND logo != ''
         order by rating desc limit ?`,
         [limit]
       );
