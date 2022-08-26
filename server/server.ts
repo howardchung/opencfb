@@ -1,6 +1,6 @@
 require('dotenv').config();
 import express from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import { buildSchema } from 'graphql';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
