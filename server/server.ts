@@ -13,8 +13,6 @@ import axios from 'axios';
 
 let db: Database = (null as unknown) as Database;
 async function init() {
-  // Download the DB
-  // downloadDB();
   db = await createDBConnection();
   const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
   await db.exec(schema);
