@@ -14,7 +14,7 @@ import axios from 'axios';
 let db: Database = (null as unknown) as Database;
 async function init() {
   // Download the DB
-  downloadDB();
+  // downloadDB();
   db = await createDBConnection();
   const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
   await db.exec(schema);
@@ -31,7 +31,6 @@ async function updateTasks() {
   await computeStreaks();
   await computeCounts();
   await computeRankings();
-  uploadDB();
 }
 
 async function createDBConnection() {
@@ -349,31 +348,10 @@ app.use('/*', (req, res) => {
   res.sendFile(path.resolve(__dirname + '/../build/index.html'));
 });
 
-function downloadDB() {
-  if (!process.env.ENABLE_GH_DB_DOWNLOAD) {
-    return;
-  }
-  execSync('bash ./scripts/download.sh');
-}
-
-function uploadDB() {
-  if (!process.env.ENABLE_GH_DB_UPLOAD) {
-    return;
-  }
-  exec('bash ./scripts/upload.sh');
-}
-
 async function updateDB() {
   if (!process.env.ENABLE_DATA_INGEST) {
     return;
   }
-  const output = await execPromise('./golang/opencfb', [], {
-    env: {
-      SVC: 'espn',
-      DB_PATH: path.resolve('./opencfb-data/opencfb.sqlite'),
-    },
-  });
-  console.log(output);
   // List of teams
   // Treat these as updates only, as we insert teams when we fetch game data
   // Coverage for FBS teams is pretty good already, so skip it
