@@ -35,7 +35,7 @@ jobs:
           SVC: espn
           DB_PATH: ./opencfb-data/opencfb.sqlite
       - name: Push to remote
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/master' }}
         run: |
           git config --global user.name "github-actions[bot]"	
           git config --global user.email "opencfb+github-actions[bot]@users.noreply.github.com"	
