@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS game (
   date timestamp with time zone,
   source text
 );
+CREATE INDEX IF NOT EXISTS game_date_idx ON game(date);
 
 CREATE TABLE IF NOT EXISTS gameteam(
   gameid bigint REFERENCES game(id) ON DELETE CASCADE, 
