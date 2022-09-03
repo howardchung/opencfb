@@ -250,11 +250,11 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
         join team on gameteam.teamid = team.id
         left join team oppTeam on oppTeam.id = gt2.teamid
         left join game_elo_delta ged on ged.id = game.id
-        where game.id IN (select gameid from gameteam where gameteam.teamid = ? and gameid < 2147483648 order by gameid desc limit ?)
+        where game.id IN (select game.id from gameteam join game on game.id = gameteam.gameid where gameteam.teamid = ? order by game.date desc limit 15)
         AND gameteam.teamid = ?
         order by game.date desc
         `,
-        [teamId, limit, teamId]
+        [teamId, teamId]
       );
       const final = data.map((row: any) => ({
         id: row.id,
