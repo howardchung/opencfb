@@ -14,6 +14,7 @@ async function init() {
   await computeStreaks();
   await computeCounts();
   await computeRankings();
+  await db.exec('VACUUM');
   await db.close();
   process.exit(0);
 }
