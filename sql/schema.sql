@@ -1,4 +1,4 @@
-PRAGMA journal_mode=wal;
+PRAGMA journal_mode=DELETE;
 
 CREATE TABLE IF NOT EXISTS game (
   id bigint PRIMARY KEY, 
