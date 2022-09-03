@@ -34,7 +34,7 @@ jobs:
         env:
           SVC: espn
           DB_PATH: ./opencfb-data/opencfb.sqlite
-      - run: node run server
+      - run: npm run server
       - name: Push to remote
         if: ${{ github.ref == 'refs/heads/master' }}
         run: |
