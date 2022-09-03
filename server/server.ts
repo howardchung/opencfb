@@ -1,35 +1,23 @@
 require('dotenv').config();
-import express from 'express';
-import { graphqlHTTP } from 'express-graphql';
-import { buildSchema } from 'graphql';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
-import cors from 'cors';
-import compression from 'compression';
 import fs from 'fs';
-import { execFile, execSync, exec } from 'child_process';
-import path from 'path';
 import axios from 'axios';
 
-let db: Database = (null as unknown) as Database;
+let db: Database = null as unknown as Database;
 async function init() {
   db = await createDBConnection();
   const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
   await db.exec(schema);
-  app.listen(process.env.PORT || 5000);
-  // Update and upload the new DB
-  await updateTasks();
-  setInterval(updateTasks, 60 * 60 * 1000);
-}
-init();
-
-async function updateTasks() {
   await updateDB();
   await replaceHttp();
   await computeStreaks();
   await computeCounts();
   await computeRankings();
+  await db.close();
+  process.exit(0);
 }
+init();
 
 async function createDBConnection() {
   return await open({
@@ -38,318 +26,7 @@ async function createDBConnection() {
   });
 }
 
-// Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
-  type Team {
-    id: String
-    displayName: String
-    abbreviation: String
-    logo: String
-    score: Int
-    field: String
-    result: String
-    rating: Float
-    gamesPlayed: Int
-    gamesWon: Int
-    gamesLost: Int
-    gamesTied: Int
-    color: String
-    alternateColor: String
-  }
-  
-  type Game {
-    id: String
-    date: String
-    result: String
-    delta: Float
-    teams: [Team]
-  }
-
-  type TeamGame {
-    id: String
-    date: String
-    result: String
-    rating: Float
-    score: Int
-    delta: Float
-    field: String
-    logo: String
-    displayName: String
-    opponent: Team
-  }
-
-  type RankingTeam {
-    id: String
-    displayName: String
-    abbreviation: String
-    logo: String
-    rating: Float
-    gamesPlayed: Int
-    gamesWon: Int
-    gamesLost: Int
-    gamesTied: Int
-  }
-
-  type RatingHistory {
-    date: String
-    result: String
-    rating: Float
-  }
-
-  type Streak {
-    id: String
-    logo: String
-    displayName: String
-    current: Int
-    allTime: Int
-  }
-
-  type TeamRivalry {
-    id: String
-    logo: String
-    displayName: String
-    gamesPlayed: Int
-    gamesWon: Int
-    gamesLost: Int
-    gamesTied: Int
-  }
-
-  type TeamRankingHistory {
-    year: Int
-    rank: Int
-  }
-  
-  type Query {
-    getTeam(teamId: String): Team
-    listTeam(limit: Int): [Team]
-    listTeamGame(teamId: String, limit: Int): [TeamGame]
-    listTeamRivalry(teamId: String): [TeamRivalry]
-    listTeamRatingHistory(teamId: String): [RatingHistory]
-    listTeamRankingHistory(teamId: String): [TeamRankingHistory]
-    listGame(limit: Int): [Game]
-    listRankingTeam(limit: Int, year: Int): [RankingTeam]
-    listStreak(type: String): [Streak]
-  }
-`);
-
-// The root provides a resolver function for each API endpoint
-var root = {
-  getTeam: async ({ teamId }: { teamId: string }) => {
-    const data = await db.all(
-      `SELECT team.id, logo, abbreviation, displayname as "displayName", gamesPlayed, gamesWon, gamesLost, gamesTied, rating, color, alternatecolor as "alternateColor"
-      FROM team
-      left join team_ranking on team.id = team_ranking.id
-      left join team_count on team.id = team_count.id
-      where team.id = ?`,
-      [teamId]
-    );
-    return data[0];
-  },
-  listTeam: async ({ limit }: { limit: number }) => {
-    const data = await db.all(
-      'SELECT id, logo, abbreviation, displayname as "displayName" FROM team ORDER BY id asc limit ?',
-      [limit]
-    );
-    return data;
-  },
-  listTeamGame: async ({
-    teamId,
-    limit,
-  }: {
-    teamId: string;
-    limit: number;
-  }) => {
-    const data = await db.all(
-      `SELECT game.id, game.date, ged.delta, team.logo, team.displayname as "displayName", gameteam.score, gameteam.rating, gameteam.result, gameteam.field, gt2.score as oppScore, gt2.teamid as oppId, gt2.rating as oppRating, gt2.result as oppResult, oppTeam.logo as oppLogo, oppTeam.displayname as oppName
-      FROM game
-      join gameteam on game.id = gameteam.gameid
-      join gameteam gt2 on gt2.gameid = gameteam.gameid and gt2.teamid != gameteam.teamid
-      join team on gameteam.teamid = team.id
-      left join team oppTeam on oppTeam.id = gt2.teamid
-      left join game_elo_delta ged on ged.id = game.id
-      where gameteam.teamid = ?
-      order by game.date desc
-      limit ?
-      `,
-      [teamId, limit]
-    );
-    const final = data.map((row) => ({
-      id: row.id,
-      date: row.date,
-      score: row.score,
-      field: row.field,
-      rating: row.rating,
-      delta: row.delta,
-      result: row.result,
-      logo: row.logo,
-      displayName: row.displayName,
-      opponent: {
-        id: row.oppId,
-        logo: row.oppLogo,
-        displayName: row.oppName,
-        score: row.oppScore,
-        rating: row.oppRating,
-        result: row.oppResult,
-      },
-    }));
-    return final;
-  },
-  listTeamRivalry: async ({ teamId }: { teamId: string }) => {
-    const data = await db.all(
-      `
-      SELECT id, logo, displayname as "displayName",
-      count(1) gamesPlayed,
-      sum(case when gameteam.result = 'W' then 1 else 0 end) gamesWon,
-      sum(case when gameteam.result = 'L' then 1 else 0 end) gamesLost,
-      sum(case when gameteam.result = 'T' then 1 else 0 end) gamesTied
-      from gameteam
-      join gameteam gt2 on gameteam.gameid = gt2.gameid and gameteam.teamid != gt2.teamid
-      left join team on gt2.teamid = team.id
-      where gameteam.teamid = ?
-      group by id, logo, displayName
-      order by gamesPlayed desc
-    `,
-      [teamId]
-    );
-    return data;
-  },
-  listTeamRankingHistory: async ({ teamId }: { teamId: string }) => {
-    const data = await db.all(
-      `
-      SELECT year, rank
-      from team_ranking_history
-      where id = ?
-      order by year asc
-    `,
-      [teamId]
-    );
-    return data;
-  },
-  listStreak: async ({ type }: { type: string }) => {
-    const data = await db.all(`
-    SELECT team.id, team.logo, team.displayname as "displayName", current, allTime
-    FROM team
-    JOIN conference on team.conferenceid = conference.id
-    LEFT JOIN team_streak on team.id = team_streak.id
-    WHERE conference.division = 'fbs'
-    ORDER BY ${type === 'allTime' ? 'allTime' : 'current'} desc
-    limit 100
-    `);
-    return data;
-  },
-  listGame: async ({ limit }: { limit: number }) => {
-    const data = await db.all(
-      `SELECT game.id, game.date, gt.score as team1Score, gt2.score as team2Score, gt.teamid as team1Id, gt2.teamid as team2Id, t1.displayname as team1Name, t2.displayname as team2Name, gt.result as team1Result, gt2.result as team2Result, t1.logo as team1Logo, t2.logo as team2Logo, gt.rating as team1Rating, gt2.rating as team2Rating, ged.delta
-      FROM game
-      join gameteam gt on game.id = gt.gameid
-      join gameteam gt2 on gt2.gameid = gt.gameid and gt2.teamid != gt.teamid
-      join team t1 on gt.teamid = t1.id
-      join team t2 on gt2.teamid = t2.id
-      left join game_elo_delta ged on game.id = ged.id
-      where gt.teamid < gt2.teamid
-      order by game.date desc
-      limit ?`,
-      [limit]
-    );
-    // Put team data into array
-    const final = data.map((row) => ({
-      id: row.id,
-      date: row.date,
-      delta: row.delta,
-      teams: [
-        {
-          id: row.team1Id,
-          logo: row.team1Logo,
-          displayName: row.team1Name,
-          result: row.team1Result,
-          score: row.team1Score,
-          rating: row.team1Rating,
-        },
-        {
-          id: row.team2Id,
-          logo: row.team2Logo,
-          displayName: row.team2Name,
-          result: row.team2Result,
-          score: row.team2Score,
-          rating: row.team2Rating,
-        },
-      ],
-    }));
-
-    return final;
-  },
-  listRankingTeam: async ({
-    limit,
-    year,
-  }: {
-    limit: number;
-    year?: number;
-  }) => {
-    let data = [];
-    if (year) {
-      data = await db.all(
-        `
-      SELECT team_ranking_history.id, team.displayname as "displayName", logo, team_ranking_history.rating
-      FROM team_ranking_history
-      JOIN team on team_ranking_history.id = team.id
-      WHERE year = ?
-      AND logo IS NOT NULL
-      AND logo != ''
-      ORDER BY rating desc
-      limit ?
-      `,
-        [year, limit]
-      );
-    } else {
-      data = await db.all(
-        `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
-        FROM team_ranking
-        left join team on team_ranking.id = team.id
-        left join team_count on team.id = team_count.id
-        WHERE logo IS NOT NULL
-        AND logo != ''
-        order by rating desc limit ?`,
-        [limit]
-      );
-    }
-    return data;
-  },
-  listTeamRatingHistory: async ({ teamId }: { teamId: string }) => {
-    const data = await db.all(
-      `SELECT date, result, cast(rating as int) as rating
-      from game
-      join gameteam on gameteam.gameid = game.id
-      where gameteam.teamid = ?
-      order by date asc
-      `,
-      [teamId]
-    );
-    return data;
-  },
-};
-
-var app = express();
-app.use(cors());
-app.use(compression());
-app.use(
-  '/graphql',
-  graphqlHTTP({
-    schema: schema,
-    rootValue: root,
-    graphiql: true,
-  })
-);
-// serve static client files
-app.use(express.static('build'));
-// Send index.html for all other requests (SPA)
-app.use('/*', (req, res) => {
-  res.sendFile(path.resolve(__dirname + '/../build/index.html'));
-});
-
 async function updateDB() {
-  if (!process.env.ENABLE_DATA_INGEST) {
-    return;
-  }
   // List of teams
   // Treat these as updates only, as we insert teams when we fetch game data
   // Coverage for FBS teams is pretty good already, so skip it
@@ -402,19 +79,6 @@ async function updateDB() {
   // http://cdn.espn.com/core/college-football/team/_/id/2116/ucf-knights?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
   // List of conferences (FBS only)
   // http://cdn.espn.com/core/college-football/standings?xhr=1&render=true&device=desktop&country=us&lang=en&region=us&site=espn&edition-host=espn.com&one-site=true&site-type=full
-}
-
-function execPromise(command: string, args: string[], options: any) {
-  return new Promise(function (resolve, reject) {
-    execFile(command, args, options, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      console.error(stderr);
-      resolve(stdout);
-    });
-  });
 }
 
 async function replaceHttp() {
@@ -581,7 +245,10 @@ async function computeStreaks() {
     } else {
       // Copy the data to current streak if we haven't done it already
       // Limit to streaks starting in 2000 to remove some old invalid teams
-      if (!(row.teamid in currentStreakMap) && new Date(row.date).getFullYear() >= 2000) {
+      if (
+        !(row.teamid in currentStreakMap) &&
+        new Date(row.date).getFullYear() >= 2000
+      ) {
         currentStreakMap[row.teamid] = runningMap[row.teamid];
       }
       // Copy the data to all time streak if it's better
