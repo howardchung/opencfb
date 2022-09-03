@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS gameteam(
   rating real,
   PRIMARY KEY(gameid, teamid)
 );
+CREATE INDEX IF NOT EXISTS gameteam_teamid_idx ON gameteam(teamid);
 
 CREATE TABLE IF NOT EXISTS team (
   id bigint PRIMARY KEY, 
