@@ -5,9 +5,10 @@ An open source project for exploring American college football data.
 # Quickstart
 
 - `npm install`
-- `npm run server`: The API is implemented using Node.js. There is a semi-working one in Go.
-- The API serves a [GraphQL](https://graphql.org) server. You can run queries against it using the graphiql interface at `/`
-- Configure the application with a `.env` file in the root of the server directory
+- `npm start`: Runs the React app
+- This project uses sql.js-httpvfs to fetch data from a statically hosted SQLite DB
+- This allows it to be deployed as a static site
+- GitHub Actions occasionally update the SQLite DB in the background using a combination of the Go and Node.js ingestion/processing services
 
 # Data Ingestion
 
