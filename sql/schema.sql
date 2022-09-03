@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS game (
   date timestamp with time zone,
   source text
 );
-CREATE INDEX IF NOT EXISTS game_date_idx ON game(date);
+DROP INDEX IF EXISTS game_date_idx;
+CREATE INDEX IF NOT EXISTS game_date_id_idx ON game(date, id);
 
 CREATE TABLE IF NOT EXISTS gameteam(
   gameid bigint REFERENCES game(id) ON DELETE CASCADE, 
@@ -17,8 +18,9 @@ CREATE TABLE IF NOT EXISTS gameteam(
   rating real,
   PRIMARY KEY(gameid, teamid)
 );
-CREATE INDEX IF NOT EXISTS gameteam_teamid_idx ON gameteam(teamid);
-CREATE INDEX IF NOT EXISTS gameteam_gameid_idx ON gameteam(gameid);
+DROP INDEX IF EXISTS gameteam_teamid_idx;
+DROP INDEX IF EXISTS gameteam_gameid_idx;
+CREATE INDEX IF NOT EXISTS gameteam_teamid_gameid_idx ON gameteam(teamid, gameid);
 
 CREATE TABLE IF NOT EXISTS team (
   id bigint PRIMARY KEY, 
