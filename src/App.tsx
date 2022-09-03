@@ -162,9 +162,9 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
     async function fetch() {
       const worker = await loadWorker();
       const data = await worker.db.query(
-        `SELECT date, result, cast(rating as int) as rating
-        from game
-        join gameteam on gameteam.gameid = game.id
+        `SELECT date, cast(rating as int) as rating
+        from gameteam 
+        join game on gameteam.gameid = game.id
         where gameteam.teamid = ?
         order by date asc
         `,
@@ -250,11 +250,11 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
         join team on gameteam.teamid = team.id
         left join team oppTeam on oppTeam.id = gt2.teamid
         left join game_elo_delta ged on ged.id = game.id
-        where gameteam.teamid = ?
+        where game.id IN (select gameid from gameteam where gameteam.teamid = ? and gameid < 2147483648 order by gameid desc limit ?)
+        AND gameteam.teamid = ?
         order by game.date desc
-        limit ?
         `,
-        [teamId, limit]
+        [teamId, limit, teamId]
       );
       const final = data.map((row: any) => ({
         id: row.id,
@@ -278,7 +278,7 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
       setRows(final);
     }
     fetch();
-  }, [teamId]);
+  }, [teamId, limit]);
   if (!rows) return <p>Loading...</p>;
   return (
     <TableContainer component={Paper}>
@@ -450,9 +450,9 @@ const Games = () => {
         join team t1 on gt.teamid = t1.id
         join team t2 on gt2.teamid = t2.id
         left join game_elo_delta ged on game.id = ged.id
-        where gt.teamid < gt2.teamid
-        order by game.date desc
-        limit 50`,
+        where game.id in (select id from game order by game.date desc limit 50)
+        and gt.teamid < gt2.teamid
+        order by game.date desc`,
         []
       );
       // Put team data into array
