@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS game (
 );
 DROP INDEX IF EXISTS game_date_idx;
 CREATE INDEX IF NOT EXISTS game_date_id_idx ON game(date, id);
+CREATE INDEX IF NOT EXISTS game_id_date_idx ON game(id, date);
 
 CREATE TABLE IF NOT EXISTS gameteam(
   gameid bigint REFERENCES game(id) ON DELETE CASCADE, 
