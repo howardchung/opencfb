@@ -163,8 +163,9 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
       const worker = await loadWorker();
       const data = await worker.db.query(
         `SELECT date, cast(rating as int) as rating
-        from gameteam 
-        join game on gameteam.gameid = game.id
+        from game
+        INDEXED BY game_id_date_idx
+        join gameteam on gameteam.gameid = game.id
         where gameteam.teamid = ?
         order by date asc
         `,
