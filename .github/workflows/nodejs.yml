@@ -26,16 +26,19 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: npm run build --if-present
-        env:
-          CI: false
+      
       - run: curl https://github.com/howardchung/opencfb/raw/release/build/opencfb.sqlite > ./public/opencfb.sqlite
       - run: pushd golang && go build && popd
       - run: ./golang/opencfb
         env:
           SVC: espn
           DB_PATH: ./public/opencfb.sqlite
+          
+      - run: npm run build --if-present
+        env:
+          CI: false
       - run: npm run server
+      
       - name: Push to remote
         if: ${{ github.ref == 'refs/heads/master' }}
         run: |
