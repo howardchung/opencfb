@@ -31,7 +31,7 @@ func jhowell() {
 	var games []Game
 	var gameTeams []GameTeam
 	var teams []Team
-	gameSet := make(map[int64]bool)
+	gameSet := make(map[int64]int)
 	var nameMap map[string]int64
 	if _, err := os.Stat("./jhowellMappings.json"); err == nil {
 		// Read the saved map
@@ -125,10 +125,13 @@ func jhowell() {
 
 		// Check if we already added this game (jhowell data lists every game twice since it's under both schools)
 		exists := gameSet[generatedId]
-		if exists {
+		if exists >= 2 {
+			panic("duplicate game id")
+		}
+		if (exists == 1) {
 			continue
 		}
-		gameSet[generatedId] = true
+		gameSet[generatedId] = gameSet[generatedId] + 1
 
 		// if generatedId == 5181333640 {
 		// 	log.Println(line)
@@ -201,8 +204,7 @@ func generateTeamId(name string) int64 {
 }
 
 // espn game ids range from 212350097 to 400986609
-// jhowell games, hash the unique key (date, name, opp) sorted, take the result % 2^32 and add 2^32 (games before 2001)
-// This places the jhowell data in a separate ID space starting at 2 billion
+// jhowell games, hash the unique key (date, name, opp) sorted, take the result % 200000000
 func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	homeIntString := strconv.FormatInt(homeTeam, 10)
 	awayIntString := strconv.FormatInt(awayTeam, 10)
@@ -210,8 +212,8 @@ func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	sort.Strings(keyArr)
 	key := strings.Join(keyArr[:], ":")
 	sum := sha256.Sum256([]byte(key))
-	// Take the first 4 bytes as a Uint32, add 2**32 to avoid collision with espn IDs
-	generatedId := int64(binary.BigEndian.Uint32(sum[0:4])) + 2147483648
+	// Take the first 4 bytes as a Uint32, modulo 200 million to avoid ESPN ID collision
+	generatedId := int64(binary.BigEndian.Uint32(sum[0:4])) % 200000000
 	// log.Println(key, sum, generatedId)
 	return generatedId
 }

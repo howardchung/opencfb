@@ -34,8 +34,10 @@ jobs:
       - run: pushd golang && go build && popd
       - run: ./golang/opencfb
         env:
+          SVC: jhowell
+      - run: ./golang/opencfb
+        env:
           SVC: espn
-          DB_PATH: ./public/opencfb.sqlite
       - run: npm run server
       
       - name: Push to remote

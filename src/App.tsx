@@ -162,12 +162,10 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
     async function fetch() {
       const worker = await loadWorker();
       const data = await worker.db.query(
-        `SELECT date, cast(rating as int) as rating
-        from game
-        INDEXED BY game_id_date_idx
-        join gameteam on gameteam.gameid = game.id
-        where gameteam.teamid = ?
-        order by date asc
+        `SELECT year, cast(rating as int) as rating
+        from team_ranking_history
+        where id = ?
+        order by year asc
         `,
         [teamId]
       );
@@ -183,14 +181,11 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
       <ResponsiveContainer width={'100%'} height={300}>
         <LineChart data={graphData}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="date"
-            tickFormatter={(val) => new Date(val).getFullYear()}
-          />
+          <XAxis dataKey="year" />
           <YAxis />
           <Tooltip
-            labelFormatter={(label) => new Date(label).toLocaleDateString()}
-            formatter={(value, name, props) => [value]}
+            // labelFormatter={(label) => new Date(label).toLocaleDateString()}
+            // formatter={(value, name, props) => [value]}
           />
           <Line dot={false} type="natural" dataKey="rating" stroke="#8884d8" />
         </LineChart>
@@ -251,7 +246,7 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
         join team on gameteam.teamid = team.id
         left join team oppTeam on oppTeam.id = gt2.teamid
         left join game_elo_delta ged on ged.id = game.id
-        where game.id IN (select game.id from game INDEXED BY game_id_date_idx join gameteam on game.id = gameteam.gameid where gameteam.teamid = ? order by game.date desc limit 20)
+        where game.id IN (select gameid from gameteam where gameteam.teamid = ? order by gameid desc limit 20)
         AND gameteam.teamid = ?
         order by game.date desc
         `,

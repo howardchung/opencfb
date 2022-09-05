@@ -16,8 +16,8 @@ An open source project for exploring American college football data.
 - Go to the `golang` directory
 - This project uses go modules, added in Go 1.11. If the project exists within the GOPATH, it may not work properly. Changing the GOPATH can resolve this: `export GOPATH=/home/ubuntu`
 - Running the ingestion workers yourself:
-  - `DB_PATH=<path_to_sqlite> SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
-  - `DB_PATH=<path_to_sqlite> SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
+  - `SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
+  - `SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
 - Build a binary for the JS application to use: `go build`
 
 # Database

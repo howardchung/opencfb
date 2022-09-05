@@ -6,13 +6,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	// "io/ioutil"
 	"log"
-	"os"
 	// "os/exec"
 	"time"
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := os.Getenv("DB_PATH")
+	connStr := "../public/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	// schema, err := ioutil.ReadFile("../sql/schema.sql")
 	// if err != nil {
