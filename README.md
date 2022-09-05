@@ -22,7 +22,7 @@ An open source project for exploring American college football data.
 
 # Database
 
-- The application expects a SQLite database in a `opencfb-data` directory.
+- The application expects a SQLite database `opencfb.sqlite` in the public directory
 
 # Tech
 

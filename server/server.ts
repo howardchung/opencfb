@@ -22,7 +22,7 @@ init();
 
 async function createDBConnection() {
   return await open({
-    filename: './opencfb-data/opencfb.sqlite',
+    filename: './public/opencfb.sqlite',
     driver: sqlite3.Database,
   });
 }

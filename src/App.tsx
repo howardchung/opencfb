@@ -54,7 +54,7 @@ async function loadWorker() {
         from: 'inline',
         config: {
           serverMode: 'full',
-          url: 'https://howardchung.github.io/opencfb/opencfb-data/opencfb.sqlite',
+          url: '/opencfb.sqlite',
           requestChunkSize: 4096,
         },
       },
