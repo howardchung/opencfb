@@ -251,7 +251,7 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
         join team on gameteam.teamid = team.id
         left join team oppTeam on oppTeam.id = gt2.teamid
         left join game_elo_delta ged on ged.id = game.id
-        where game.id IN (select game.id from gameteam join game on game.id = gameteam.gameid where gameteam.teamid = ? order by game.date desc limit 15)
+        where game.id IN (select game.id from game INDEXED BY game_id_date_idx join gameteam on game.id = gameteam.gameid where gameteam.teamid = ? order by game.date desc limit 20)
         AND gameteam.teamid = ?
         order by game.date desc
         `,
