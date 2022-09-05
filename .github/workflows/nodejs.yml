@@ -31,14 +31,13 @@ jobs:
           CI: false
   
       - run: curl -sSL https://github.com/howardchung/opencfb/raw/release/public/opencfb.sqlite > ./public/opencfb.sqlite
-      - run: pushd golang && go build
-      - run: ./golang/opencfb
+      - run: cd golang && go build
+      - run: cd golang && ./opencfb
         env:
           SVC: jhowell
-      - run: ./golang/opencfb
+      - run: cd golang && ./opencfb
         env:
           SVC: espn
-      - run: popd
       - run: npm run server
       
       - name: Push to remote
