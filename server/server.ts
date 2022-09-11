@@ -4,6 +4,8 @@ import { open, Database } from 'sqlite';
 import fs from 'fs';
 import axios from 'axios';
 
+type NumberDict = { [key: string]: number };
+
 let db: Database = null as unknown as Database;
 async function init() {
   db = await createDBConnection();
@@ -91,6 +93,7 @@ async function computeRankings() {
   // Elo rank teams
   // Start all teams at 1000
   let ratingMap: NumberDict = {};
+  let lastWeekRating: NumberDict | null = null;
   let initial = 1000;
   let kFactor = 32;
 
@@ -199,15 +202,20 @@ async function computeRankings() {
       }
       currYear = nextYear;
     }
+    const lastDate = Number(new Date(data[data.length - 1]?.date));
+    if (lastWeekRating == null && lastDate - Number(nextDate) < 10 * 24 * 60 * 60 * 1000) {
+      lastWeekRating = JSON.parse(JSON.stringify(ratingMap));
+    }
   }
 
   await db.run('DELETE FROM team_ranking');
   let keys = Object.keys(ratingMap);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    await db.run('INSERT INTO team_ranking(id, rating) VALUES (?, ?)', [
+    await db.run('INSERT INTO team_ranking(id, rating, prevRating) VALUES (?, ?, ?)', [
       key,
       ratingMap[key],
+      lastWeekRating?.[key],
     ]);
   }
   await db.run('COMMIT');

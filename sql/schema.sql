@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS conference(
 
 CREATE TABLE IF NOT EXISTS team_ranking (
   id bigint REFERENCES team(id) ON DELETE CASCADE PRIMARY KEY,
-  rating real
+  rating real,
+  prevRating real
 );
 
 CREATE TABLE IF NOT EXISTS team_count (

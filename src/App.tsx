@@ -54,7 +54,7 @@ async function loadWorker() {
         from: 'inline',
         config: {
           serverMode: 'full',
-          url: 'https://howardchung.github.io/opencfb/public/opencfb.sqlite',
+          url: process.env.NODE_ENV === 'development' ? '/opencfb.sqlite' : 'https://howardchung.github.io/opencfb/public/opencfb.sqlite',
           requestChunkSize: 4096,
         },
       },
@@ -575,7 +575,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
         );
       } else {
         res = await worker.db.query(
-          `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied
+          `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied, team_ranking.prevRating
         FROM team_ranking
         left join team on team_ranking.id = team.id
         left join team_count on team.id = team_count.id
@@ -591,6 +591,11 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
   }, [setRows, limit, year]);
   if (!rows) return <p>Loading...</p>;
   // return <pre>{JSON.stringify(data, null, 2)}</pre>;
+  const prevRankings = [...rows].sort((a,b) => b.prevRating - a.prevRating);
+  const prevRankingsMap = new Map<Number, Number>();
+  prevRankings.forEach((row, i) => {
+    prevRankingsMap.set(row.id, i);
+  });
   return (
     <TableContainer component={Paper}>
       <Table aria-label="simple table">
@@ -598,15 +603,23 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
           <TableRow>
             <TableCell align="left">#</TableCell>
             <TableCell />
+            <TableCell />
             <TableCell align="left">Name</TableCell>
             <TableCell align="right">Rating</TableCell>
+            {!Boolean(year) && <TableCell align="right">Delta</TableCell>}
             {!Boolean(year) && <TableCell align="right">WLT</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row: any, i: number) => (
-            <TableRow key={row.id}>
-              <TableCell align="left">{i + 1}</TableCell>
+          {rows.map((row: any, i: number) => {
+            const delta = Number(row.rating - row.prevRating).toFixed(1);
+            const rankDelta = Number(prevRankingsMap.get(row.id)) - i;
+            return <TableRow key={row.id}>
+              <TableCell align="left">{i + 1}{' '}
+              </TableCell>
+              <TableCell>
+                {Math.abs(rankDelta) > 0 && <span style={{ color: Number(rankDelta) < 0 ? 'red' : 'green'}}>{rankDelta > 0 ? '↑' : '↓'}{Math.abs(rankDelta)}</span>}
+              </TableCell>
               <TableCell>
                 <img className="teamLogo" src={row.logo} alt={''} />
               </TableCell>
@@ -623,6 +636,11 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
               <TableCell align="right">{Math.floor(row.rating)}</TableCell>
               {!Boolean(year) && (
                 <TableCell align="right">
+                  <span style={{ color: Number(delta) === 0 ? 'black' : Number(delta) < 0 ? 'red' : 'green' }}>{Number(delta) < 0 ? '' : '+'}{delta}</span>
+                </TableCell>
+              )}
+              {!Boolean(year) && (
+                <TableCell align="right">
                   <span style={{ color: 'green' }}>{row.gamesWon}</span>
                   {' - '}
                   <span style={{ color: 'red' }}>{row.gamesLost}</span>
@@ -630,8 +648,8 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
                   <span style={{ color: 'gray' }}>{row.gamesTied}</span>
                 </TableCell>
               )}
-            </TableRow>
-          ))}
+            </TableRow>;
+          })}
         </TableBody>
       </Table>
     </TableContainer>
