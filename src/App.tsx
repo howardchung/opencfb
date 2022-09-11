@@ -446,7 +446,7 @@ const Games = () => {
         join team t1 on gt.teamid = t1.id
         join team t2 on gt2.teamid = t2.id
         left join game_elo_delta ged on game.id = ged.id
-        where game.id in (select id from game order by game.date desc limit 50)
+        where game.id in (select id from game order by game.date desc limit 100)
         and gt.teamid < gt2.teamid
         order by game.date desc`,
         []
