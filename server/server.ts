@@ -203,7 +203,7 @@ async function computeRankings() {
       currYear = nextYear;
     }
     const lastDate = Number(new Date(data[data.length - 1]?.date));
-    if (lastWeekRating == null && lastDate - Number(nextDate) < 10 * 24 * 60 * 60 * 1000) {
+    if (lastWeekRating == null && lastDate - Number(nextDate) < 7 * 24 * 60 * 60 * 1000) {
       lastWeekRating = JSON.parse(JSON.stringify(ratingMap));
     }
   }
