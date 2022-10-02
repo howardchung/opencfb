@@ -575,10 +575,9 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
         );
       } else {
         res = await worker.db.query(
-          `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, gamesPlayed, gamesWon, gamesLost, gamesTied, team_ranking.prevRating
+          `SELECT team_ranking.id, team.displayname as "displayName", logo, abbreviation, team_ranking.rating, team_ranking.prevRating
         FROM team_ranking
         left join team on team_ranking.id = team.id
-        left join team_count on team.id = team_count.id
         WHERE logo IS NOT NULL
         AND logo != ''
         order by rating desc limit ?`,
@@ -607,7 +606,6 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
             <TableCell align="left">Name</TableCell>
             <TableCell align="right">Rating</TableCell>
             {!Boolean(year) && <TableCell align="right">Delta</TableCell>}
-            {!Boolean(year) && <TableCell align="right">WLT</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -637,15 +635,6 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
               {!Boolean(year) && (
                 <TableCell align="right">
                   <span style={{ color: Number(delta) === 0 ? 'black' : Number(delta) < 0 ? 'red' : 'green' }}>{Number(delta) < 0 ? '' : '+'}{delta}</span>
-                </TableCell>
-              )}
-              {!Boolean(year) && (
-                <TableCell align="right">
-                  <span style={{ color: 'green' }}>{row.gamesWon}</span>
-                  {' - '}
-                  <span style={{ color: 'red' }}>{row.gamesLost}</span>
-                  {' - '}
-                  <span style={{ color: 'gray' }}>{row.gamesTied}</span>
                 </TableCell>
               )}
             </TableRow>;
