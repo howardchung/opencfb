@@ -63,8 +63,7 @@ async function updateDB() {
   for (let i = 0; i < fcsConferences.length; i++) {
     const conf = fcsConferences[i];
     // console.log(conf);
-    // Make an exception for the Ivy League for historical reasons
-    const division = conf.id === '22' ? 'fbs' : 'fcs';
+    const division = 'fcs';
     await db.run(
       `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
       [conf.id, conf.name, division]
