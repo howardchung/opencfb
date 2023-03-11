@@ -68,10 +68,11 @@ async function updateDB() {
       `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
       [conf.id, conf.name, division]
     );
+    // TODO some teams have incorrect conference mappings but we can probably fix here
   }
-  // Add conferenceid 0, a catch-all for old FBS/IA teams without espn records
+  // Add conference catch-alls for FBS/IA teams without espn records
   await db.run(
-    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (FBS)', 'fbs')`
+    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (probably former FBS but not eligible)', 'fcs')`
   );
   await db.run(
     `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`
