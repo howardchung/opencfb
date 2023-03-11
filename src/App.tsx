@@ -749,25 +749,20 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      When chess players play a game, their ratings change by an amount based on
-      the expected result given the strength of their opponent. A strong player
-      defeating a weak one will cause a small rating change, while a weak player
-      defeating a strong opponent will cause a bigger change.
-    </Typography>
-    <br />
-    <Typography>
-      One such system is called{' '}
-      <a
+      In the <a
         href="https://en.wikipedia.org/wiki/Elo_rating_system"
         rel="noopener noreferrer"
         target="_blank"
       >
         Elo
-      </a>
-      , and has been used for many different types of games.
+      </a> rating system, ratings change based on
+      the expected result given the strength of each player. A strong player
+      defeating a weak one will cause a small rating change, while a weak player
+      defeating a strong opponent will cause a bigger change.
     </Typography>
+    <br />
     <Typography>
-      Let's try it with over 50,000 college football games dating back to 1869!
+      What if we applied it to over 40,000 college football games dating back to 1869?
     </Typography>
     <br />
     <Typography variant="button">Notes</Typography>
@@ -785,8 +780,7 @@ const Home = () => (
       </li>
       <li>
         <Typography variant="caption">
-          Games involving a non-FBS team (or historical equivalent) aren't
-          rated.
+          Only games involving current FBS teams are rated.
         </Typography>
       </li>
     </ul>
