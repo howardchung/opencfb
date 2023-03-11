@@ -96,6 +96,7 @@ async function computeRankings() {
   let lastWeekRating: NumberDict | null = null;
   let initial = 1000;
   let kFactor = 32;
+  let gamesRated = 0;
 
   // Get an array of all games
   const data = await db.all(
@@ -137,6 +138,7 @@ async function computeRankings() {
 
     let delta = 0;
     if (teamSet.has(team1) && teamSet.has(team2)) {
+      gamesRated += 1;
       let team1Result = game.team1result;
       if (!ratingMap[team1]) {
         ratingMap[team1] = initial;
@@ -219,6 +221,7 @@ async function computeRankings() {
     ]);
   }
   await db.run('COMMIT');
+  console.log('%s games rated', gamesRated);
 }
 
 async function computeCounts() {
