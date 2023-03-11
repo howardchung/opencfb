@@ -215,9 +215,10 @@ func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	// Generated ID should be under 200 million to avoid ESPN ID collision
 	// Make the first 4 chars the year to make sortable, e.g. 1984, ID is 1984xxxxx
 	// Take the first 4 bytes of hash as a Uint32, modulo 100000 to get the remaining bits
-	generatedString := strconv.Itoa(gameDate.Year()) + strconv.Itoa(int64(binary.BigEndian.Uint32(sum[0:4])) % 100000)
+	generatedString := strconv.Itoa(gameDate.Year()) + strconv.Itoa(int(binary.BigEndian.Uint32(sum[0:4])) % 100000)
 	// log.Println(key, sum, generatedId)
-	return strconv.Atoi(generatedString)
+	generatedId, _ := strconv.Atoi(generatedString)
+	return int64(generatedId)
 }
 
 func matchTeamStringToId(input string, nameMap map[string]int64) int64 {
