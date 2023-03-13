@@ -14,11 +14,10 @@ An open source project for exploring American college football data.
 
 - Install Go
 - Go to the `golang` directory
-- This project uses go modules, added in Go 1.11. If the project exists within the GOPATH, it may not work properly. Changing the GOPATH can resolve this: `export GOPATH=/home/ubuntu`
 - Running the ingestion workers yourself:
   - `SVC=jhowell go run *.go`: Fetch data from jhowell and save to CSV file, import data from CSV file and insert into DB, mapping teams to ESPN teams
   - `SVC=espn go run *.go`: Fetch data from ESPN and insert into DB
-- Build a binary for the JS application to use: `go build`
+- Go back out to root directory and build/run the TypeScript service that computes ratings, streaks, and other data: `npm run buildServer && npm run server`
 
 # Database
 
