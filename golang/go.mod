@@ -8,5 +8,5 @@ require (
 	github.com/joho/godotenv v1.2.0
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/mattn/go-sqlite3 v1.6.0
-	golang.org/x/net v0.0.0-20171212005608-d866cfc389ce
+	golang.org/x/net v0.7.0
 )
