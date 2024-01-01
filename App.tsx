@@ -350,9 +350,11 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
                 {row.score} - {row.opponent.score}
               </TableCell>
               <TableCell align="right">
-                {row.result === 'W' && '+'}
-                {row.result === 'L' && '-'}
-                {row.delta.toFixed(1)}{' '}
+                <span style={{ color: row.result === 'L' ? 'red' : 'green' }}>
+                  {row.result === 'W' && '+'}
+                  {row.result === 'L' && '-'}
+                  {row.delta.toFixed(1)}{' '}
+                </span>
               </TableCell>
             </TableRow>
           ))}
@@ -544,7 +546,7 @@ const Games = () => {
               <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
                 {row.teams[0].score} - {row.teams[1].score}
               </TableCell>
-              <TableCell align="right">±{Math.floor(row.delta)}</TableCell>
+              <TableCell align="right">±{row.delta.toFixed(1)}</TableCell>
             </TableRow>
           ))}
         </TableBody>
