@@ -352,7 +352,7 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
               <TableCell align="right">
                 {row.result === 'W' && '+'}
                 {row.result === 'L' && '-'}
-                {Math.floor(row.delta)}{' '}
+                {row.delta.toFixed(1)}{' '}
               </TableCell>
             </TableRow>
           ))}
