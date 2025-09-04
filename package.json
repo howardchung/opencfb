@@ -21,8 +21,6 @@
     "dev": "vite --host",
     "preview": "vite preview",
     "build": "vite build",
-    "jhowell": "SVC=jhowell cd golang && ./opencfb",
-    "espn": "SVC=espn cd golang && ./opencfb",
     "fetch": "node fetch.ts",
     "prettier": "npx prettier --single-quote --write ."
   },
