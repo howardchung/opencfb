@@ -8,7 +8,7 @@ An open source project for exploring American college football data.
 - `npm run dev`: Runs the React app
 - This project uses sql.js-httpvfs to fetch data from a statically hosted SQLite DB
 - This allows it to be deployed as a static site
-- GitHub Actions occasionally update the SQLite DB in the background using a combination of the Go and Node.js ingestion/processing services (server/server.ts)
+- GitHub Actions occasionally update the SQLite DB in the background using a combination of the Go and Node.js ingestion/processing services
 
 # Data Ingestion
 
