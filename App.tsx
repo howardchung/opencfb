@@ -43,6 +43,10 @@ history.listen((location, action) => {
 });
 
 const wasmUrl = new URL('sql.js-httpvfs/dist/sql-wasm.wasm', import.meta.url);
+const workerUrl = new URL(
+  "sql.js-httpvfs/dist/sqlite.worker.js",
+  import.meta.url,
+);
 let worker: WorkerHttpvfs | null = null;
 async function loadWorker() {
   if (worker) {
@@ -59,7 +63,7 @@ async function loadWorker() {
         },
       },
     ],
-    '/sqlite.worker.js',
+    workerUrl.toString(),
     wasmUrl.toString()
   );
   return worker;
