@@ -45,7 +45,7 @@ async function updateDB() {
 
   // List of conferences
   const response3 = await axios.get(
-    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc'
+    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc',
   );
   const fbsConferences = response3.data?.children;
   for (let i = 0; i < fbsConferences.length; i++) {
@@ -53,11 +53,11 @@ async function updateDB() {
     // console.log(conf);
     await db.run(
       `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
-      [conf.id, conf.name, 'fbs']
+      [conf.id, conf.name, 'fbs'],
     );
   }
   const response4 = await axios.get(
-    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc'
+    'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc',
   );
   const fcsConferences = response4.data?.children;
   for (let i = 0; i < fcsConferences.length; i++) {
@@ -66,16 +66,16 @@ async function updateDB() {
     const division = 'fcs';
     await db.run(
       `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (?, ?, ?)`,
-      [conf.id, conf.name, division]
+      [conf.id, conf.name, division],
     );
     // TODO some teams have incorrect conference mappings but we can probably fix here
   }
   // Add conference catch-alls for FBS/IA teams without espn records
   await db.run(
-    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (probably former FBS but not eligible)', 'fcs')`
+    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483647, 'Unknown (probably former FBS but not eligible)', 'fcs')`,
   );
   await db.run(
-    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`
+    `INSERT OR REPLACE INTO conference(id, displayname, division) VALUES (2147483646, 'Unknown (FCS)', 'fcs')`,
   );
 
   // Team details
@@ -107,7 +107,7 @@ async function computeRankings() {
     join team t1 on gt.teamid = t1.id
     join team t2 on gt2.teamid = t2.id
     where gt.teamid < gt2.teamid
-    order by game.date asc`
+    order by game.date asc`,
   );
 
   const eligibleTeams = await db.all(`
@@ -129,11 +129,11 @@ async function computeRankings() {
     // Write the current team ratings into the gameteam table (pre-game rating)
     await db.run(
       `UPDATE gameteam SET rating = ? WHERE gameteam.gameid = ? and gameteam.teamid = ?`,
-      [ratingMap[team1], game.id, team1]
+      [ratingMap[team1], game.id, team1],
     );
     await db.run(
       `UPDATE gameteam SET rating = ? WHERE gameteam.gameid = ? and gameteam.teamid = ?`,
-      [ratingMap[team2], game.id, team2]
+      [ratingMap[team2], game.id, team2],
     );
 
     let delta = 0;
@@ -170,7 +170,7 @@ async function computeRankings() {
     // Record the delta
     await db.run(
       'INSERT OR REPLACE INTO game_elo_delta (id, delta) VALUES (?, ?)',
-      [game.id, delta]
+      [game.id, delta],
     );
 
     // If we encounter a new year after february
@@ -199,13 +199,16 @@ async function computeRankings() {
         // console.log(row);
         await db.run(
           `INSERT INTO team_ranking_history (id, year, rank, rating) VALUES (?, ?, ?, ?)`,
-          [row.teamId, row.year, row.rank, row.rating]
+          [row.teamId, row.year, row.rank, row.rating],
         );
       }
       currYear = nextYear;
     }
     const lastDate = Number(new Date(data[data.length - 1]?.date));
-    if (lastWeekRating == null && lastDate - Number(nextDate) < 7 * 24 * 60 * 60 * 1000) {
+    if (
+      lastWeekRating == null &&
+      lastDate - Number(nextDate) < 7 * 24 * 60 * 60 * 1000
+    ) {
       lastWeekRating = JSON.parse(JSON.stringify(ratingMap));
     }
   }
@@ -214,11 +217,10 @@ async function computeRankings() {
   let keys = Object.keys(ratingMap);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    await db.run('INSERT INTO team_ranking(id, rating, prevRating) VALUES (?, ?, ?)', [
-      key,
-      ratingMap[key],
-      lastWeekRating?.[key],
-    ]);
+    await db.run(
+      'INSERT INTO team_ranking(id, rating, prevRating) VALUES (?, ?, ?)',
+      [key, ratingMap[key], lastWeekRating?.[key]],
+    );
   }
   await db.run('COMMIT');
   console.log('%s games rated', gamesRated);
@@ -279,7 +281,7 @@ async function computeStreaks() {
     const key = keys[i];
     await db.run(
       'INSERT INTO team_streak (id, current, allTime) VALUES (?, ?, ?)',
-      [key, currentStreakMap[key], allTimeStreakMap[key]]
+      [key, currentStreakMap[key], allTimeStreakMap[key]],
     );
   }
   await db.run('COMMIT');

@@ -1,22 +1,29 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import { Switch, Route, BrowserRouter, Link } from 'react-router-dom';
-import Button from '@material-ui/core/Button';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import IconButton from '@material-ui/core/IconButton';
-import Typography from '@material-ui/core/Typography';
-import GitHubIcon from '@material-ui/icons/GitHub';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import Container from '@material-ui/core/Container';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
+import {
+  Button,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Container,
+  Tabs,
+  Tab,
+  Box,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+} from '@mui/material';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import {
   LineChart,
   CartesianGrid,
@@ -26,25 +33,18 @@ import {
   Line,
   ResponsiveContainer,
 } from 'recharts';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import createHistory from 'history/createBrowserHistory';
+import { createBrowserHistory } from 'history';
 import { createDbWorker, WorkerHttpvfs } from 'sql.js-httpvfs';
 
-export const history = createHistory();
+export const history = createBrowserHistory();
 
-history.listen((location, action) => {
+history.listen(() => {
   window.scrollTo(0, 0);
 });
 
 const wasmUrl = new URL('sql.js-httpvfs/dist/sql-wasm.wasm', import.meta.url);
 const workerUrl = new URL(
-  "sql.js-httpvfs/dist/sqlite.worker.js",
+  'sql.js-httpvfs/dist/sqlite.worker.js',
   import.meta.url,
 );
 let worker: WorkerHttpvfs | null = null;
@@ -58,13 +58,16 @@ async function loadWorker() {
         from: 'inline',
         config: {
           serverMode: 'full',
-          url: process.env.NODE_ENV === 'development' ? '/opencfb.sqlite' : 'https://corsproxy.io/?url=https://github.com/howardchung/opencfb/raw/refs/heads/release/public/opencfb.sqlite',
+          url:
+            process.env.NODE_ENV === 'development'
+              ? '/opencfb.sqlite'
+              : 'https://corsproxy.io/?url=https://github.com/howardchung/opencfb/raw/refs/heads/release/public/opencfb.sqlite',
           requestChunkSize: 4096,
         },
       },
     ],
     workerUrl.toString(),
-    wasmUrl.toString()
+    wasmUrl.toString(),
   );
   return worker;
 }
@@ -95,7 +98,7 @@ const Team = ({ teamId }: { teamId: string }) => {
       left join team_ranking on team.id = team_ranking.id
       left join team_count on team.id = team_count.id
       where team.id = ?`,
-        [teamId]
+        [teamId],
       );
       setRows(data);
     }
@@ -171,7 +174,7 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
         where id = ?
         order by year asc
         `,
-        [teamId]
+        [teamId],
       );
       setRows(data);
     }
@@ -188,8 +191,8 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
           <XAxis dataKey="year" />
           <YAxis />
           <Tooltip
-            // labelFormatter={(label) => new Date(label).toLocaleDateString()}
-            // formatter={(value, name, props) => [value]}
+          // labelFormatter={(label) => new Date(label).toLocaleDateString()}
+          // formatter={(value, name, props) => [value]}
           />
           <Line dot={false} type="natural" dataKey="rating" stroke="#8884d8" />
         </LineChart>
@@ -210,7 +213,7 @@ const RankingHistoryGraph = ({ teamId }: { teamId: string }) => {
         where id = ?
         order by year asc
       `,
-        [teamId]
+        [teamId],
       );
       setRows(data);
     }
@@ -254,7 +257,7 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
         AND gameteam.teamid = ?
         order by game.date desc
         `,
-        [teamId, teamId]
+        [teamId, teamId],
       );
       const final = data.map((row: any) => ({
         id: row.id,
@@ -387,7 +390,7 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => {
         group by id, logo, displayName
         order by gamesPlayed desc
       `,
-        [teamId]
+        [teamId],
       );
       setRows(data);
     }
@@ -455,7 +458,7 @@ const Games = () => {
         where game.id in (select id from game order by game.date desc limit 100)
         and gt.teamid < gt2.teamid
         order by game.date desc`,
-        []
+        [],
       );
       // Put team data into array
       const final = data.map((row: any) => ({
@@ -488,6 +491,8 @@ const Games = () => {
 
   if (!rows) return <p>Loading...</p>;
   return (
+    <>
+    <Typography variant="h6">Games</Typography>
     <TableContainer component={Paper}>
       <Table aria-label="simple table">
         <TableHead>
@@ -556,6 +561,7 @@ const Games = () => {
         </TableBody>
       </Table>
     </TableContainer>
+    </>
   );
 };
 
@@ -577,7 +583,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
       ORDER BY rating desc
       limit ?
       `,
-          [year, limit]
+          [year, limit],
         );
       } else {
         res = await worker.db.query(
@@ -587,7 +593,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
         WHERE logo IS NOT NULL
         AND logo != ''
         order by rating desc limit ?`,
-          [limit]
+          [limit],
         );
       }
       setRows(res);
@@ -596,7 +602,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
   }, [setRows, limit, year]);
   if (!rows) return <p>Loading...</p>;
   // return <pre>{JSON.stringify(data, null, 2)}</pre>;
-  const prevRankings = [...rows].sort((a,b) => b.prevRating - a.prevRating);
+  const prevRankings = [...rows].sort((a, b) => b.prevRating - a.prevRating);
   const prevRankingsMap = new Map<Number, Number>();
   prevRankings.forEach((row, i) => {
     prevRankingsMap.set(row.id, i);
@@ -618,32 +624,52 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
           {rows.map((row: any, i: number) => {
             const delta = Number(row.rating - row.prevRating).toFixed(1);
             const rankDelta = Number(prevRankingsMap.get(row.id)) - i;
-            return <TableRow key={row.id}>
-              <TableCell align="left">{i + 1}{' '}
-              </TableCell>
-              <TableCell>
-                {Math.abs(rankDelta) > 0 && <span style={{ color: Number(rankDelta) < 0 ? 'red' : 'green'}}>{rankDelta > 0 ? '↑' : '↓'}{Math.abs(rankDelta)}</span>}
-              </TableCell>
-              <TableCell>
-                <img className="teamLogo" src={row.logo} alt={''} />
-              </TableCell>
-              <TableCell component="th" scope="row">
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <Link
-                    style={{ color: 'black', textDecoration: 'none' }}
-                    to={`/teams/${row.id}`}
-                  >
-                    {row.displayName}
-                  </Link>
-                </div>
-              </TableCell>
-              <TableCell align="right">{Math.floor(row.rating)}</TableCell>
-              {!Boolean(year) && (
-                <TableCell align="right">
-                  <span style={{ color: Number(delta) === 0 ? 'black' : Number(delta) < 0 ? 'red' : 'green' }}>{Number(delta) < 0 ? '' : '+'}{delta}</span>
+            return (
+              <TableRow key={row.id}>
+                <TableCell align="left">{i + 1} </TableCell>
+                <TableCell>
+                  {Math.abs(rankDelta) > 0 && (
+                    <span
+                      style={{ color: Number(rankDelta) < 0 ? 'red' : 'green' }}
+                    >
+                      {rankDelta > 0 ? '↑' : '↓'}
+                      {Math.abs(rankDelta)}
+                    </span>
+                  )}
                 </TableCell>
-              )}
-            </TableRow>;
+                <TableCell>
+                  <img className="teamLogo" src={row.logo} alt={''} />
+                </TableCell>
+                <TableCell component="th" scope="row">
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <Link
+                      style={{ color: 'black', textDecoration: 'none' }}
+                      to={`/teams/${row.id}`}
+                    >
+                      {row.displayName}
+                    </Link>
+                  </div>
+                </TableCell>
+                <TableCell align="right">{Math.floor(row.rating)}</TableCell>
+                {!Boolean(year) && (
+                  <TableCell align="right">
+                    <span
+                      style={{
+                        color:
+                          Number(delta) === 0
+                            ? 'black'
+                            : Number(delta) < 0
+                              ? 'red'
+                              : 'green',
+                      }}
+                    >
+                      {Number(delta) < 0 ? '' : '+'}
+                      {delta}
+                    </span>
+                  </TableCell>
+                )}
+              </TableRow>
+            );
           })}
         </TableBody>
       </Table>
@@ -755,20 +781,23 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      In the <a
+      In the{' '}
+      <a
         href="https://en.wikipedia.org/wiki/Elo_rating_system"
         rel="noopener noreferrer"
         target="_blank"
       >
         Elo
-      </a> rating system, ratings change based on
-      the expected result given the strength of each player. A strong player
-      defeating a weak one will cause a small rating change, while a weak player
-      defeating a strong opponent will cause a bigger change.
+      </a>{' '}
+      rating system, ratings change based on the expected result given the
+      strength of each player. A strong player defeating a weak one will cause a
+      small rating change, while a weak player defeating a strong opponent will
+      cause a bigger change.
     </Typography>
     <br />
     <Typography>
-      What if we applied it to over 40,000 college football games dating back to 1869?
+      Let's apply it to over 40,000 college football games dating back to
+      1869!
     </Typography>
     <br />
     <Typography variant="button">Notes</Typography>
@@ -820,136 +849,127 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-class App extends Component {
-  render() {
-    return (
-      <BrowserRouter>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography
-              variant="h6"
-              style={{ textTransform: 'uppercase', fontWeight: 600 }}
-            >
-              <Link
-                to="/"
-                style={{ textDecoration: 'none', color: 'white' }}
-              >{`<OpenCFB/>`}</Link>
-            </Typography>
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography
+            variant="h6"
+            style={{ textTransform: 'uppercase', fontWeight: 600 }}
+          >
             <Link
-              to="/rankings"
+              to="/"
               style={{ textDecoration: 'none', color: 'white' }}
-            >
-              <Button color="inherit">Rankings</Button>
-            </Link>
-            {/* <Link
+            >{`<OpenCFB/>`}</Link>
+          </Typography>
+          <Link
+            to="/rankings"
+            style={{ textDecoration: 'none', color: 'white' }}
+          >
+            <Button color="inherit">Rankings</Button>
+          </Link>
+          {/* <Link
                 to="/teams"
                 style={{ textDecoration: 'none', color: 'white' }}
               >
                 <Button color="inherit">Teams</Button>
               </Link> */}
-            {/* <Link
+          {/* <Link
                 to="/rivalries"
                 style={{ textDecoration: 'none', color: 'white' }}
               >
                 <Button color="inherit">Rivalries</Button>
               </Link> */}
-            {/* <Link
+          {/* <Link
                 to="/circles"
                 style={{ textDecoration: 'none', color: 'white' }}
               >
                 <Button color="inherit">Circles</Button>
               </Link> */}
-            <Link
-              to="/streaks"
-              style={{ textDecoration: 'none', color: 'white' }}
-            >
-              <Button color="inherit">Streaks</Button>
-            </Link>
-            <Link
-              to="/games"
-              style={{ textDecoration: 'none', color: 'white' }}
-            >
-              <Button color="inherit">Games</Button>
-            </Link>
-            <a
-              style={{ marginLeft: 'auto' }}
-              href="https://github.com/howardchung/opencfb"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <IconButton aria-label="GitHub">
-                <GitHubIcon />
-              </IconButton>
-            </a>
-          </Toolbar>
-        </AppBar>
-        <Container maxWidth={'md'}>
-          <Switch>
-            <Route path="/" exact render={() => <Home />} />
-            <Route
-              path="/teams/:teamId?"
-              render={({ match }) => <TeamPage teamId={match.params.teamId} />}
-            />
-            <Route path="/games" render={({ match }) => <Games />} />
-            <Route
-              path="/rankings/:year?"
-              render={({ match, history }) => (
-                <React.Fragment>
-                  <Typography variant="button">Rankings</Typography>
-                  <br />
-                  <FormControl>
-                    <InputLabel id="rankings-year-label">Year</InputLabel>
-                    <Select
-                      style={{ width: '100px' }}
-                      labelId="rankings-year-label"
-                      value={match.params.year || ''}
-                      onChange={(e) =>
-                        history.push('/rankings/' + e.target.value)
-                      }
-                    >
-                      {/* <MenuItem value="">Current</MenuItem> */}
-                      {/* starting year one higher if we're past january */}
-                      {Array.from(
-                        new Array(
-                          new Date().getFullYear() -
-                            (new Date().getMonth() > 0 ? 0 : 1) -
-                            1869 +
-                            1
-                        ),
-                        (x, i) =>
-                          new Date().getFullYear() -
+          <Link
+            to="/streaks"
+            style={{ textDecoration: 'none', color: 'white' }}
+          >
+            <Button color="inherit">Streaks</Button>
+          </Link>
+          <Link to="/games" style={{ textDecoration: 'none', color: 'white' }}>
+            <Button color="inherit">Games</Button>
+          </Link>
+          <a
+            style={{ marginLeft: 'auto' }}
+            href="https://github.com/howardchung/opencfb"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <IconButton aria-label="GitHub">
+              <GitHubIcon />
+            </IconButton>
+          </a>
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth={'md'}>
+        <Switch>
+          <Route path="/" exact render={() => <Home />} />
+          <Route
+            path="/teams/:teamId?"
+            render={({ match }) => <TeamPage teamId={match.params.teamId} />}
+          />
+          <Route path="/games" render={({ match }) => <Games />} />
+          <Route
+            path="/rankings/:year?"
+            render={({ match, history }) => (
+              <React.Fragment>
+                <Typography variant="h6">Rankings</Typography>
+                <FormControl>
+                  <InputLabel id="rankings-year-label">Year</InputLabel>
+                  <Select
+                    style={{ width: '100px' }}
+                    labelId="rankings-year-label"
+                    value={match.params.year || ''}
+                    onChange={(e) =>
+                      history.push('/rankings/' + e.target.value)
+                    }
+                  >
+                    {/* <MenuItem value="">Current</MenuItem> */}
+                    {/* starting year one higher if we're past january */}
+                    {Array.from(
+                      new Array(
+                        new Date().getFullYear() -
                           (new Date().getMonth() > 0 ? 0 : 1) -
-                          i
-                      ).map((year) => (
-                        <MenuItem value={year}>{year}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Rankings limit={500} year={Number(match.params.year)} />
-                </React.Fragment>
-              )}
-            />
-            <Route
-              path="/streaks"
-              render={({ match }) => (
-                <div>
-                  <Grid container spacing={3}>
-                    <Grid item xs>
-                      <Streaks type="current" />
-                    </Grid>
-                    <Grid item xs>
-                      <Streaks type="allTime" />
-                    </Grid>
-                  </Grid>
-                </div>
-              )}
-            />
-          </Switch>
-        </Container>
-      </BrowserRouter>
-    );
-  }
-}
+                          1869 +
+                          1,
+                      ),
+                      (x, i) =>
+                        new Date().getFullYear() -
+                        (new Date().getMonth() > 0 ? 0 : 1) -
+                        i,
+                    ).map((year) => (
+                      <MenuItem value={year}>{year}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Rankings limit={500} year={Number(match.params.year)} />
+              </React.Fragment>
+            )}
+          />
+          <Route
+            path="/streaks"
+            render={({ match }) => (
+              <>
+              <Typography variant="h6">Streaks</Typography>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <Streaks type="current" />
+                <Streaks type="allTime" />
+              </div>
+              </>
+            )}
+          />
+        </Switch>
+      </Container>
+    </BrowserRouter>
+  );
+};
 
 export default App;
 

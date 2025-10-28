@@ -29,7 +29,7 @@ jobs:
       - run: npm run build --if-present
         env:
           CI: false
-  
+
       - run: curl -sSL https://github.com/howardchung/opencfb/raw/release/public/opencfb.sqlite > ./public/opencfb.sqlite
       - run: cd golang && go build
       - run: cd golang && ./opencfb
@@ -39,7 +39,7 @@ jobs:
         env:
           SVC: espn
       - run: npm run fetch
-      
+
       - name: Push to remote
         if: ${{ github.ref == 'refs/heads/master' }}
         run: |
