@@ -4,17 +4,16 @@
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.10.0",
-    "@material-ui/icons": "^4.9.1",
-    "axios": "^1.11.0",
+    "@material-ui/icons": "^4.11.3",
+    "axios": "^1.13.0",
     "dotenv": "^17.2.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
-    "recharts": "^2.9.3",
+    "recharts": "^2.15.4",
     "sql.js-httpvfs": "^0.8.12",
     "sqlite": "^4.0.9",
-    "sqlite3": "^5.1.5",
-    "vite": "^7.1.4"
+    "sqlite3": "^5.1.7"
   },
   "type": "module",
   "scripts": {
@@ -29,8 +28,8 @@
     "@types/react": "^16.9.35",
     "@types/react-dom": "^16.9.8",
     "@types/react-router-dom": "^5.1.5",
-    "@types/recharts": "^1.8.27",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
   },
   "browserslist": {
     "production": [
