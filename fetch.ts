@@ -2,25 +2,20 @@ import 'dotenv/config';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import fs from 'node:fs';
-import axios from 'axios';
 
 type NumberDict = { [key: string]: number };
 
-let db: Database = null as unknown as Database;
-async function init() {
-  db = await createDBConnection();
-  const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
-  await db.exec(schema);
-  await updateDB();
-  await replaceHttp();
-  await computeStreaks();
-  await computeCounts();
-  await computeRankings();
-  await db.exec('VACUUM');
-  await db.close();
-  process.exit(0);
-}
-init();
+let db = await createDBConnection();
+const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
+await db.exec(schema);
+await updateDB();
+await replaceHttp();
+await computeStreaks();
+await computeCounts();
+await computeRankings();
+await db.exec('VACUUM');
+await db.close();
+process.exit(0);
 
 async function createDBConnection() {
   return await open({
@@ -44,10 +39,11 @@ async function updateDB() {
   // }
 
   // List of conferences
-  const response3 = await axios.get(
+  const response3 = await fetch(
     'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=80&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc',
   );
-  const fbsConferences = response3.data?.children;
+  const response3Json = await response3.json();
+  const fbsConferences = response3Json.children;
   for (let i = 0; i < fbsConferences.length; i++) {
     const conf = fbsConferences[i];
     // console.log(conf);
@@ -56,10 +52,11 @@ async function updateDB() {
       [conf.id, conf.name, 'fbs'],
     );
   }
-  const response4 = await axios.get(
+  const response4 = await fetch(
     'https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings?region=us&lang=en&contentorigin=espn&group=81&level=3&sort=leaguewinpercent%3Adesc%2Cvsconf_wins%3Adesc%2Cvsconf_gamesbehind%3Aasc%2Cvsconf_playoffseed%3Aasc%2Cwins%3Adesc%2Closses%3Adesc%2Cplayoffseed%3Aasc%2Calpha%3Aasc',
   );
-  const fcsConferences = response4.data?.children;
+  const response4Json = await response4.json();
+  const fcsConferences = response4Json.children;
   for (let i = 0; i < fcsConferences.length; i++) {
     const conf = fcsConferences[i];
     // console.log(conf);
