@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import fs from 'node:fs';
