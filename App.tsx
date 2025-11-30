@@ -62,7 +62,7 @@ async function loadWorker() {
             process.env.NODE_ENV === 'development'
               ? '/opencfb.sqlite.png'
               : '/opencfb.sqlite.png',
-          requestChunkSize: 8192,
+          requestChunkSize: 4096,
         },
       },
     ],
