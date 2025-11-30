@@ -4,7 +4,7 @@ import cp from 'node:child_process';
 import fs from 'node:fs';
 
 let db = await open({
-  filename: './public/opencfb.sqlite',
+  filename: './public/opencfb.sqlite.png',
   driver: sqlite3.Database,
 });
 const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
@@ -32,7 +32,7 @@ cp.execSync(process.cwd() + '/golang/opencfb', {
 });
 
 db = await open({
-  filename: './public/opencfb.sqlite',
+  filename: './public/opencfb.sqlite.png',
   driver: sqlite3.Database,
 });
 await updateDB();

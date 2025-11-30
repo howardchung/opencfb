@@ -4,6 +4,7 @@ import (
 	// "encoding/binary"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+
 	// "io/ioutil"
 	"log"
 	// "os/exec"
@@ -11,7 +12,7 @@ import (
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "../public/opencfb.sqlite"
+	connStr := "../public/opencfb.sqlite.png"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	return db
 }
