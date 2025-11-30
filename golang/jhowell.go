@@ -187,7 +187,7 @@ func jhowell() {
 		InsertGame(db, game, true)
 	}
 	for _, gameTeam := range gameTeams {
-		log.Println(gameTeam)
+		// log.Println(gameTeam)
 		InsertGameTeam(db, gameTeam, true)
 	}
 	Commit(db)
