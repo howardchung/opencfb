@@ -6,16 +6,17 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	// "strings"
+	"strings"
 	"time"
 )
 
 func espn() {
 	db := InitDatabase()
-	BeginTransaction(db);
+	BeginTransaction(db)
 	// Can start at 2001 (ESPN has data this far)
 	year, _, _ := time.Now().Date()
-	startAt := year - 1
+	// startAt := year - 1
+	startAt := 2001
 
 	for i := startAt; i <= year; i++ {
 		seasonType := 2
@@ -25,25 +26,47 @@ func espn() {
 		scoreboard := getScoreboard(url)
 		// Build queue of API calls
 		var queue []string
+		if len(scoreboard.Leagues) == 0 {
+			log.Fatal("FATAL: no leagues", url)
+		}
 		for _, season := range scoreboard.Leagues[0].Calendar {
-			for _, week := range season.Entries {
-				queue = append(queue, generateApiUrl(strconv.Itoa(i), season.Value, week.Value))
+			if season.Label != "Off Season" {
+				for _, week := range season.Entries {
+					queue = append(queue, generateApiUrl(strconv.Itoa(i), season.Value, week.Value))
+				}
 			}
 		}
 		// loop over queue and make those API calls
 		for _, apiCall := range queue {
-			log.Println(apiCall)
-			time.Sleep(100 * time.Millisecond)
 			scoreboard := getScoreboard(apiCall)
 			for _, event := range scoreboard.Events {
-				id, _ := strconv.ParseInt(event.Id, 10, 64)
-				homeTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Id, 10, 64)
-				awayTeam, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Id, 10, 64)
-				homeScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[0].Score, 10, 64)
-				awayScore, _ := strconv.ParseInt(event.Competitions[0].Competitors[1].Score, 10, 64)
+				// log.Println(event.Id, len(event.Competitions))
+				if len(event.Competitions) == 0 {
+					continue
+				}
+				id, err := strconv.ParseInt(event.Id, 10, 64)
+				if err != nil {
+					log.Fatal(err, event)
+				}
+				homeTeam, err := strconv.ParseInt(event.Competitions[0].Competitors[0].Id, 10, 64)
+				if err != nil {
+					log.Fatal(err, event.Competitions[0].Competitors[0])
+				}
+				awayTeam, err := strconv.ParseInt(event.Competitions[0].Competitors[1].Id, 10, 64)
+				if err != nil {
+					log.Fatal(err, event.Competitions[0].Competitors[1])
+				}
+				homeScore, err := strconv.ParseInt(event.Competitions[0].Competitors[0].Score, 10, 64)
+				if err != nil {
+					log.Fatal(err, event.Competitions[0].Competitors[0])
+				}
+				awayScore, err := strconv.ParseInt(event.Competitions[0].Competitors[1].Score, 10, 64)
+				if err != nil {
+					log.Fatal(err, event.Competitions[0].Competitors[1])
+				}
 				date, err := time.Parse("2006-01-02T15:04Z", event.Date)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatal(err, event.Date)
 				}
 				game := Game{
 					Id:         id,
@@ -87,11 +110,13 @@ func espn() {
 				for _, competitor := range event.Competitions[0].Competitors {
 					id, err := strconv.ParseInt(competitor.Id, 10, 64)
 					if err != nil {
-						log.Fatal(err)
+						log.Fatal(err, competitor)
 					}
 					conferenceId, err := strconv.ParseInt(competitor.Team.ConferenceId, 10, 64)
 					if err != nil {
-						log.Println(err, competitor.Team.DisplayName)
+						// This isn't critical so just log it
+						// Some teams have "" as Conference
+						log.Println(err, competitor.Team.DisplayName, competitor.Team.ConferenceId)
 					}
 					team := Team{
 						Id:             id,
@@ -113,26 +138,36 @@ func espn() {
 func generateApiUrl(year string, seasonType string, week string) string {
 	// FBS, group 80
 	// FCS, group 81
-	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?lang=en&region=us&calendartype=blacklist&limit=100&dates=" + year + "&seasontype=" + seasonType + "&week=" + week + "&groups=80"
+	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?lang=en&region=us&calendartype=blacklist&limit=100&groups=80&dates=" + year + "&seasontype=" + seasonType + "&week=" + week
 }
 
 func getScoreboard(url string) Scoreboard {
+	log.Println(url)
 	var scoreboard Scoreboard
-	res, err := http.Get(url)
+	// Check if cached
+	spl := strings.Split(url, "?")
+	filePath := "espn/" + spl[1]
+	var data []byte
+	content, err := ioutil.ReadFile(filePath)
+	if err == nil {
+		data = content
+	} else {
+		// Otherwise fetch and write result to file
+		res, err := http.Get(url)
+		if err != nil {
+			panic(err.Error())
+		}
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			panic(err.Error())
+		}
+		data = body
+		ioutil.WriteFile(filePath, data, 0644)
+		time.Sleep(500 * time.Millisecond)
+	}
+	err = json.Unmarshal(data, &scoreboard)
 	if err != nil {
 		panic(err.Error())
 	}
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err.Error())
-	}
-	err = json.Unmarshal([]byte(body), &scoreboard)
-	if err != nil {
-		panic(err.Error())
-	}
-	// err = ioutil.WriteFile("./"+url[(strings.Index(url, "?")+1):], body, 0644)
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
 	return scoreboard
 }

@@ -1,12 +1,40 @@
 import sqlite3 from 'sqlite3';
-import { open, Database } from 'sqlite';
+import { open } from 'sqlite';
+import cp from 'node:child_process';
 import fs from 'node:fs';
 
-type NumberDict = { [key: string]: number };
-
-let db = await createDBConnection();
+let db = await open({
+  filename: './public/opencfb.sqlite',
+  driver: sqlite3.Database,
+});
 const schema = fs.readFileSync('./sql/schema.sql', 'utf8');
 await db.exec(schema);
+await db.close();
+
+// Note: Go processes currently handle jhowell and espn game ingestion
+cp.execSync('go build', {
+  cwd: process.cwd() + '/golang',
+  stdio: 'inherit',
+});
+cp.execSync(process.cwd() + '/golang/opencfb', {
+  cwd: process.cwd() + '/golang',
+  env: {
+    SVC: 'jhowell',
+  },
+  stdio: 'inherit',
+});
+cp.execSync(process.cwd() + '/golang/opencfb', {
+  cwd: process.cwd() + '/golang',
+  env: {
+    SVC: 'espn',
+  },
+  stdio: 'inherit',
+});
+
+db = await open({
+  filename: './public/opencfb.sqlite',
+  driver: sqlite3.Database,
+});
 await updateDB();
 await replaceHttp();
 await computeStreaks();
@@ -15,13 +43,6 @@ await computeRankings();
 await db.exec('VACUUM');
 await db.close();
 process.exit(0);
-
-async function createDBConnection() {
-  return await open({
-    filename: './public/opencfb.sqlite',
-    driver: sqlite3.Database,
-  });
-}
 
 async function updateDB() {
   // List of teams
@@ -85,11 +106,10 @@ async function replaceHttp() {
 }
 
 async function computeRankings() {
-  const db = await createDBConnection();
   // Elo rank teams
   // Start all teams at 1000
-  let ratingMap: NumberDict = {};
-  let lastWeekRating: NumberDict | null = null;
+  let ratingMap: Record<string, number> = {};
+  let lastWeekRating: Record<string, number> | null = null;
   let initial = 1000;
   let kFactor = 32;
   let gamesRated = 0;
@@ -223,7 +243,6 @@ async function computeRankings() {
 }
 
 async function computeCounts() {
-  const db = await createDBConnection();
   await db.run('BEGIN TRANSACTION');
   await db.run('DROP TABLE team_count');
   await db.run(`CREATE TABLE team_count AS
@@ -239,13 +258,12 @@ async function computeCounts() {
 }
 
 async function computeStreaks() {
-  const db = await createDBConnection();
   const data = await db.all(`SELECT date, result, teamid from gameteam
   join game on game.id = gameteam.gameid
   order by date desc`);
-  let runningMap: NumberDict = {};
-  let currentStreakMap: NumberDict = {};
-  let allTimeStreakMap: NumberDict = {};
+  let runningMap: Record<string, number> = {};
+  let currentStreakMap: Record<string, number> = {};
+  let allTimeStreakMap: Record<string, number> = {};
   data.forEach((row: any) => {
     if (!runningMap[row.teamid]) {
       runningMap[row.teamid] = 0;

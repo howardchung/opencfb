@@ -13,30 +13,25 @@ import (
 func InitDatabase() *sqlx.DB {
 	connStr := "../public/opencfb.sqlite"
 	db := sqlx.MustConnect("sqlite3", connStr)
-	// schema, err := ioutil.ReadFile("../sql/schema.sql")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// db.MustExec(string(schema))
 	return db
 }
 
 func BeginTransaction(db *sqlx.DB) {
-	_, err := db.Exec("BEGIN TRANSACTION");
+	_, err := db.Exec("BEGIN TRANSACTION")
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func Commit(db *sqlx.DB) {
-	_, err := db.Exec("COMMIT");
+	_, err := db.Exec("COMMIT")
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func DeleteJHowell(db *sqlx.DB) {
-	_, err := db.Exec("DELETE FROM game where source = 'jh'; DELETE FROM gameteam where gameid not IN (SELECT id from game);");
+	_, err := db.Exec("DELETE FROM game where source = 'jh'; DELETE FROM gameteam where gameid not IN (SELECT id from game);")
 	if err != nil {
 		log.Fatal(err)
 	}

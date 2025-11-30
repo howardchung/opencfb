@@ -76,7 +76,7 @@ func jhowell() {
 		homeString := s[0]
 		awayString := s[4]
 		homeScore, _ := strconv.ParseInt(s[6], 10, 64)
-	  awayScore, _ := strconv.ParseInt(s[7], 10, 64)
+		awayScore, _ := strconv.ParseInt(s[7], 10, 64)
 		homeResult := s[5]
 		awayResult := "T"
 		if homeResult == "W" {
@@ -94,11 +94,11 @@ func jhowell() {
 		}
 
 		homeConferenceId := int64(2147483647)
-		if (strings.HasSuffix(homeString, "(non-IA)")) {
+		if strings.HasSuffix(homeString, "(non-IA)") {
 			homeConferenceId = 2147483646
 		}
 		awayConferenceId := int64(2147483647)
-		if (strings.HasSuffix(awayString, "(non-IA)")) {
+		if strings.HasSuffix(awayString, "(non-IA)") {
 			awayConferenceId = 2147483646
 		}
 
@@ -128,7 +128,7 @@ func jhowell() {
 		if exists >= 2 {
 			panic("duplicate game id")
 		}
-		if (exists == 1) {
+		if exists == 1 {
 			continue
 		}
 		gameSet[generatedId] = gameSet[generatedId] + 1
@@ -138,8 +138,8 @@ func jhowell() {
 		// }
 
 		games = append(games, Game{
-			Id:    generatedId,
-			Date:  gameDate,
+			Id:     generatedId,
+			Date:   gameDate,
 			Source: "jh",
 		})
 		gameTeams = append(gameTeams, GameTeam{
@@ -157,13 +157,13 @@ func jhowell() {
 			Result: awayResult,
 		})
 		teams = append(teams, Team{
-			Id:          homeTeamId,
-			DisplayName: homeString,
+			Id:           homeTeamId,
+			DisplayName:  homeString,
 			ConferenceId: homeConferenceId,
 		})
 		teams = append(teams, Team{
-			Id:          awayTeamId,
-			DisplayName: awayString,
+			Id:           awayTeamId,
+			DisplayName:  awayString,
 			ConferenceId: awayConferenceId,
 		})
 	}
@@ -215,7 +215,7 @@ func generateGameId(homeTeam int64, awayTeam int64, gameDate time.Time) int64 {
 	// Generated ID should be under 200 million to avoid ESPN ID collision
 	// Make the first 4 chars the year to make sortable, e.g. 1984, ID is 1984xxxxx
 	// Take the first 4 bytes of hash as a Uint32, modulo 100000 to get the remaining bits
-	generatedString := strconv.Itoa(gameDate.Year()) + strconv.Itoa(int(binary.BigEndian.Uint32(sum[0:4])) % 100000)
+	generatedString := strconv.Itoa(gameDate.Year()) + strconv.Itoa(int(binary.BigEndian.Uint32(sum[0:4]))%100000)
 	// log.Println(key, sum, generatedId)
 	generatedId, _ := strconv.Atoi(generatedString)
 	return int64(generatedId)

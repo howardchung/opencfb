@@ -7,6 +7,7 @@ import (
 type Scoreboard struct {
 	Leagues []struct {
 		Calendar []struct {
+			Label   string `json:"label"`
 			Value   string `json:"value"`
 			Entries []struct {
 				Value string `json:"value"`
