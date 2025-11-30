@@ -178,12 +178,12 @@ func jhowell() {
 	DeleteJHowell(db)
 	BeginTransaction(db)
 	for _, team := range teams {
-		log.Println(team)
+		log.Println(team.Id)
 		// False here as we don't want to overwrite logo data from ESPN
 		InsertTeam(db, team, false)
 	}
 	for _, game := range games {
-		log.Println(game)
+		log.Println(game.Id)
 		InsertGame(db, game, true)
 	}
 	for _, gameTeam := range gameTeams {
