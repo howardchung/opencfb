@@ -248,7 +248,7 @@ func ComputeRankings(db *sqlx.DB) {
 		if err != nil {
 			panic(err.Error())
 		}
-		if lastWeekRating == nil && lastDate.Unix()-nextDate.Unix() < 7*24*60*60 {
+		if lastWeekRating == nil && nextDate.Unix() > 0 && lastDate.Unix()-nextDate.Unix() < 7*24*60*60 {
 			lastWeekRating = maps.Clone(ratingMap)
 		}
 	}

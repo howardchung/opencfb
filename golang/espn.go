@@ -18,6 +18,7 @@ func Espn() {
 	year, _, _ := time.Now().Date()
 	// startAt := year - 1
 	startAt := 2001
+	gameCount := 0
 
 	for i := startAt; i <= year; i++ {
 		seasonType := 2
@@ -41,7 +42,6 @@ func Espn() {
 		for _, apiCall := range queue {
 			scoreboard := getScoreboard(apiCall)
 			for _, event := range scoreboard.Events {
-				// log.Println(event.Id, len(event.Competitions))
 				if len(event.Competitions) == 0 {
 					continue
 				}
@@ -77,6 +77,7 @@ func Espn() {
 				}
 				if game.State == "STATUS_FINAL" {
 					InsertGame(db, game, true)
+					gameCount += 1
 					homeResult := "T"
 					awayResult := "T"
 					if homeScore > awayScore {
@@ -134,6 +135,7 @@ func Espn() {
 		}
 	}
 	db.MustExec("COMMIT")
+	log.Printf("espn: %d games", gameCount)
 }
 
 func generateApiUrl(year string, seasonType string, week string) string {
