@@ -2,17 +2,18 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func espn() {
+func Espn() {
 	db := InitDatabase()
-	BeginTransaction(db)
+	db.MustExec("BEGIN TRANSACTION")
 	// Can start at 2001 (ESPN has data this far)
 	year, _, _ := time.Now().Date()
 	// startAt := year - 1
@@ -132,7 +133,7 @@ func espn() {
 			}
 		}
 	}
-	Commit(db)
+	db.MustExec("COMMIT")
 }
 
 func generateApiUrl(year string, seasonType string, week string) string {
@@ -148,7 +149,7 @@ func getScoreboard(url string) Scoreboard {
 	spl := strings.Split(url, "?")
 	filePath := "espn/" + spl[1]
 	var data []byte
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	if err == nil {
 		data = content
 	} else {
@@ -157,12 +158,12 @@ func getScoreboard(url string) Scoreboard {
 		if err != nil {
 			panic(err.Error())
 		}
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			panic(err.Error())
 		}
 		data = body
-		ioutil.WriteFile(filePath, data, 0644)
+		os.WriteFile(filePath, data, 0644)
 		time.Sleep(500 * time.Millisecond)
 	}
 	err = json.Unmarshal(data, &scoreboard)

@@ -77,3 +77,38 @@ type GameTeam struct {
 	Field  string
 	Result string
 }
+
+type Conferences struct {
+	Children []Conference
+}
+
+type Conference struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"name"`
+	Division    string
+}
+
+type RankedTeam struct {
+	TeamId int64
+	Rating float64
+	Year   int
+	Rank   int
+}
+
+type RatingGame struct {
+	Id          int64  `db:"id"`
+	Date        string `db:"date"`
+	Team1       int64  `db:"team1"`
+	Team2       int64  `db:"team2"`
+	Team1Result string `db:"team1result"`
+}
+
+type EligibleTeam struct {
+	Id int64 `db:"id"`
+}
+
+type StreakGame struct {
+	Date   string `db:"date"`
+	Result string `db:"result"`
+	TeamId int64  `db:"teamid"`
+}

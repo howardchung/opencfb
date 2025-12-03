@@ -2,35 +2,30 @@
 package main
 
 import (
-	// "database/sql"
-	// "encoding/json"
-	"fmt"
-	"golang.org/x/net/html"
-	// "io/ioutil"
 	"bufio"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
-	// "time"
-	// _ "github.com/mattn/go-sqlite3"
+
+	"golang.org/x/net/html"
 )
 
-func JhowellFetcher(filename string) {
+func JHowellFetcher(filename string) {
 	file, err := os.Create(filename)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	w := bufio.NewWriter(file)
 	defer file.Close()
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/byName.htm")
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	defer resp.Body.Close()
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	var f func(*html.Node)
 	f = func(n *html.Node) {
@@ -52,12 +47,12 @@ func JhowellFetcher(filename string) {
 func readScores(w *bufio.Writer, pageName string) {
 	resp, err := http.Get("http://www.jhowell.net/cf/scores/" + pageName)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	defer resp.Body.Close()
 	doc, err := html.Parse(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	var year string
 	var f func(*html.Node)

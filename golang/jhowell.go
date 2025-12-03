@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"crypto/sha256"
 	"encoding/binary"
+
 	// "fmt"
 	"encoding/json"
 	// "github.com/jmoiron/sqlx"
-	"io/ioutil"
+
 	"log"
 	"os"
 	"sort"
@@ -16,9 +17,9 @@ import (
 	"time"
 )
 
-func jhowell() {
+func JHowell() {
 	if _, err := os.Stat("./jhowell.csv"); os.IsNotExist(err) {
-		JhowellFetcher("./jhowell.csv")
+		JHowellFetcher("./jhowell.csv")
 	}
 	log.SetOutput(os.Stdout)
 	db := InitDatabase()
@@ -35,9 +36,9 @@ func jhowell() {
 	var nameMap map[string]int64
 	if _, err := os.Stat("./jhowellMappings.json"); err == nil {
 		// Read the saved map
-		b, err := ioutil.ReadFile("./jhowellMappings.json")
+		b, err := os.ReadFile("./jhowellMappings.json")
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		json.Unmarshal(b, &nameMap)
 	} else {
@@ -171,12 +172,12 @@ func jhowell() {
 	// Save our map to file
 	// jsonString, err := json.MarshalIndent(nameMap, "", "  ")
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	panic(err.Error())
 	// }
-	// ioutil.WriteFile("./jhowellMappings.json", jsonString, 0644)
+	// os.WriteFile("./jhowellMappings.json", jsonString, 0644)
 
 	DeleteJHowell(db)
-	BeginTransaction(db)
+	db.MustExec("BEGIN TRANSACTION")
 	for _, team := range teams {
 		log.Println(team.Id)
 		// False here as we don't want to overwrite logo data from ESPN
@@ -190,7 +191,7 @@ func jhowell() {
 		// log.Println(gameTeam)
 		InsertGameTeam(db, gameTeam, true)
 	}
-	Commit(db)
+	db.MustExec("COMMIT")
 }
 
 // espn team ids range from 2 to 3200
@@ -245,7 +246,7 @@ func matchTeamStringToId(input string, nameMap map[string]int64) int64 {
 	// 	var displayName string
 	// 	err := row.Scan(&team, &displayName)
 	// 	if err != nil {
-	// 		log.Fatal(err)
+	// 		panic(err.Error())
 	// 	}
 	// 	nameMap[input] = team
 	// 	// log.Println(input, team, displayName)

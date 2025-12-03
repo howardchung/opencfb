@@ -12,16 +12,13 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^5.3.4",
     "recharts": "^3.5.1",
-    "sql.js-httpvfs": "^0.8.12",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7"
+    "sql.js-httpvfs": "^0.8.12"
   },
   "type": "module",
   "scripts": {
     "start": "vite --host",
     "preview": "vite preview",
     "build": "vite build",
-    "fetch": "node fetch.ts",
     "prettier": "npx prettier --single-quote --write ."
   },
   "devDependencies": {
@@ -30,7 +27,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4"
+    "vite": "^7.2.6"
   },
   "browserslist": {
     "production": [

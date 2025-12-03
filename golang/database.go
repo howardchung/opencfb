@@ -1,14 +1,11 @@
 package main
 
 import (
-	// "encoding/binary"
+	"os"
+	"time"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-
-	// "io/ioutil"
-	"log"
-	// "os/exec"
-	"time"
 )
 
 func InitDatabase() *sqlx.DB {
@@ -17,25 +14,17 @@ func InitDatabase() *sqlx.DB {
 	return db
 }
 
-func BeginTransaction(db *sqlx.DB) {
-	_, err := db.Exec("BEGIN TRANSACTION")
+func Schema() {
+	content, err := os.ReadFile("../sql/schema.sql")
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
-}
-
-func Commit(db *sqlx.DB) {
-	_, err := db.Exec("COMMIT")
-	if err != nil {
-		log.Fatal(err)
-	}
+	db := InitDatabase()
+	db.MustExec(string(content))
 }
 
 func DeleteJHowell(db *sqlx.DB) {
-	_, err := db.Exec("DELETE FROM game where source = 'jh'; DELETE FROM gameteam where gameid not IN (SELECT id from game);")
-	if err != nil {
-		log.Fatal(err)
-	}
+	db.MustExec("DELETE FROM game where source = 'jh'; DELETE FROM gameteam where gameid not IN (SELECT id from game);")
 }
 
 func InsertGame(db *sqlx.DB, game Game, replace bool) {
@@ -43,11 +32,8 @@ func InsertGame(db *sqlx.DB, game Game, replace bool) {
 	if replace {
 		query = `INSERT OR REPLACE INTO game VALUES ($1, $2, $3, $4)`
 	}
-	_, err := db.Exec(query,
+	db.MustExec(query,
 		game.Id, game.Attendance, game.Date, game.Source)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam, replace bool) {
@@ -55,11 +41,8 @@ func InsertGameTeam(db *sqlx.DB, gameTeam GameTeam, replace bool) {
 	if replace {
 		query = `INSERT OR REPLACE INTO gameteam VALUES ($1, $2, $3, $4, $5, $6)`
 	}
-	_, err := db.Exec(query,
+	db.MustExec(query,
 		gameTeam.GameId, gameTeam.TeamId, gameTeam.Score, gameTeam.Field, gameTeam.Result, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func InsertTeam(db *sqlx.DB, team Team, replace bool) {
@@ -67,31 +50,26 @@ func InsertTeam(db *sqlx.DB, team Team, replace bool) {
 	if replace {
 		query = `INSERT OR REPLACE INTO team VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	}
-	_, err := db.Exec(query,
+	db.MustExec(query,
 		team.Id, team.DisplayName, team.Abbreviation, team.Color, team.AlternateColor, team.Logo, team.ConferenceId)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
-/*
-func InsertConference(conference Conference) {
-
+func InsertConference(db *sqlx.DB, conference Conference) {
+	db.MustExec(`INSERT OR REPLACE INTO conference VALUES ($1, $2, $3)`,
+		conference.Id, conference.DisplayName, conference.Division)
 }
-*/
 
 func GetTeams(db *sqlx.DB, id int64) []Team {
-	log.Printf("GetTeams: %d", id)
 	var response []Team
 	rows, err := db.Queryx("SELECT * FROM team WHERE (0 = $1 OR id = $1) ORDER BY id desc", id)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	for rows.Next() {
 		var t Team
 		err = rows.StructScan(&t)
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		response = append(response, t)
 	}
@@ -99,15 +77,14 @@ func GetTeams(db *sqlx.DB, id int64) []Team {
 }
 
 func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
-	log.Printf("GetGames: %d", teamId)
 	var response []Game
 	rows, err := db.Queryx("SELECT DISTINCT game.id, game.state, game.date FROM game JOIN gameteam ON gameteam.gameid = game.id WHERE (0 = $1 OR teamid = $1) ORDER BY date desc LIMIT 100", teamId)
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	gameTeams, err := db.Queryx("SELECT * from gameteam ORDER BY gameid")
 	if err != nil {
-		log.Fatal(err)
+		panic(err.Error())
 	}
 	var gameTeamObjs []GameTeam
 	for gameTeams.Next() {
@@ -118,7 +95,7 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 		var result string
 		err = gameTeams.Scan(&gameId, &teamId, &score, &field, &result)
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		gt := GameTeam{
 			GameId: gameId,
@@ -135,11 +112,11 @@ func GetGames(db *sqlx.DB, teamId int64, season int) []Game {
 		var date string
 		err = rows.Scan(&id, &state, &date)
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		parsedDate, err := time.Parse("2006-01-02 15:04:05+00:00", date)
 		if err != nil {
-			log.Fatal(err)
+			panic(err.Error())
 		}
 		var singleGameTeams []Team
 		for _, gt := range gameTeamObjs {

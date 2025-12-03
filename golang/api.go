@@ -6,7 +6,6 @@ package main
 // 	"github.com/graphql-go/graphql"
 // 	"github.com/jmoiron/sqlx"
 // 	"io"
-// 	"io/ioutil"
 // 	"log"
 // 	"net/http"
 // 	"os"
@@ -250,7 +249,7 @@ package main
 // 		w.Header().Set("Access-Control-Allow-Origin", "*")
 // 		w.Header().Set("Content-Type", "application/json")
 // 		var opts RequestOptions
-// 		body, err := ioutil.ReadAll(r.Body)
+// 		body, err := io.ReadAll(r.Body)
 // 		if err != nil {
 // 			log.Fatal(err)
 // 		}
