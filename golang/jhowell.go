@@ -178,13 +178,11 @@ func JHowell() {
 
 	DeleteJHowell(db)
 	db.MustExec("BEGIN TRANSACTION")
-	teamCount := 0
 	gameCount := 0
 	for _, team := range teams {
 		// log.Println(team.Id)
 		// False here as we don't want to overwrite logo data from ESPN
 		InsertTeam(db, team, false)
-		teamCount += 1
 	}
 	for _, game := range games {
 		// log.Println(game.Id)
@@ -196,7 +194,7 @@ func JHowell() {
 		InsertGameTeam(db, gameTeam, true)
 	}
 	db.MustExec("COMMIT")
-	log.Printf("JHowell: %d teams, %d games", teamCount, gameCount)
+	log.Printf("jhowell: %d games", gameCount)
 }
 
 // espn team ids range from 2 to 3200

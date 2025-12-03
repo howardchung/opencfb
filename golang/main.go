@@ -137,6 +137,11 @@ func ComputeRankings(db *sqlx.DB) {
 		teamSet[element.Id] = true
 	}
 
+	lastDate, err := time.Parse("2006-01-02 15:04:05+00:00", data[len(data)-1].Date)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	currYear := 0
 	db.MustExec("BEGIN TRANSACTION")
 	db.MustExec("DELETE FROM team_ranking_history")
@@ -195,19 +200,21 @@ func ComputeRankings(db *sqlx.DB) {
 
 		// If we encounter a new year after february
 		// Snapshot the current team relative ranks
-		var nextDate time.Time
-		var next RatingGame
 		var nextYear int
 		var nextMonth int
 		last := i+1 == len(data)
 		if !last {
-			next = data[i+1]
+			next := data[i+1]
 			nextDate, err := time.Parse("2006-01-02 15:04:05+00:00", next.Date)
 			if err != nil {
 				panic(err.Error())
 			}
 			nextYear = nextDate.Year()
 			nextMonth = int(nextDate.Month())
+			if lastWeekRating == nil && nextDate.Unix() > 0 && lastDate.Unix()-nextDate.Unix() < 7*24*60*60 {
+				// Next game is within a week of the end, copy the ratingMap
+				lastWeekRating = maps.Clone(ratingMap)
+			}
 		}
 		// 0 is january
 		if last || (nextYear > currYear && nextMonth >= 2) {
@@ -243,13 +250,6 @@ func ComputeRankings(db *sqlx.DB) {
 				)
 			}
 			currYear = nextYear
-		}
-		lastDate, err := time.Parse("2006-01-02 15:04:05+00:00", data[len(data)-1].Date)
-		if err != nil {
-			panic(err.Error())
-		}
-		if lastWeekRating == nil && nextDate.Unix() > 0 && lastDate.Unix()-nextDate.Unix() < 7*24*60*60 {
-			lastWeekRating = maps.Clone(ratingMap)
 		}
 	}
 
