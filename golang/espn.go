@@ -147,12 +147,14 @@ func generateApiUrl(year string, seasonType string, week string) string {
 func getScoreboard(url string) Scoreboard {
 	log.Println(url)
 	var scoreboard Scoreboard
+	year, _, _ := time.Now().Date()
 	// Check if cached
+	// Don't cache data from current year since we may have incomplete responses
 	spl := strings.Split(url, "?")
 	filePath := "espn/" + spl[1]
 	var data []byte
 	content, err := os.ReadFile(filePath)
-	if err == nil {
+	if err == nil && !strings.Contains(url, "dates="+strconv.Itoa(year)) {
 		data = content
 	} else {
 		// Otherwise fetch and write result to file
