@@ -211,8 +211,10 @@ func ComputeRankings(db *sqlx.DB) {
 			}
 			nextYear = nextDate.Year()
 			nextMonth = int(nextDate.Month())
-			if lastWeekRating == nil && nextDate.Unix() > 0 && lastDate.Unix()-nextDate.Unix() < 7*24*60*60 {
+			if lastWeekRating == nil && nextDate.Unix() > 0 && lastDate.Unix()-nextDate.Unix() < 6*24*60*60 {
 				// Next game is within a week of the end, copy the ratingMap
+				// Use 6 days instead of 7 to account for case where the last week has a limited number of games
+				// In that case we might trigger the copy too early
 				lastWeekRating = maps.Clone(ratingMap)
 			}
 		}
