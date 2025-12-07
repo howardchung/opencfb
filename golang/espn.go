@@ -15,8 +15,10 @@ func Espn() {
 	db := InitDatabase()
 	db.MustExec("BEGIN TRANSACTION")
 	// Can start at 2001 (ESPN has data this far)
-	year, _, _ := time.Now().Date()
-	// startAt := year - 1
+	year, month, _ := time.Now().Date()
+	if int(month) == 1 {
+		year -= 1
+	}
 	startAt := 2001
 	gameCount := 0
 
@@ -25,7 +27,7 @@ func Espn() {
 		week := 1
 		// Do every week in the calendar, ingest games/teams
 		url := generateApiUrl(strconv.Itoa(i), strconv.Itoa(seasonType), strconv.Itoa(week))
-		scoreboard := getScoreboard(url)
+		scoreboard := getScoreboard(url, year)
 		// Build queue of API calls
 		var queue []string
 		if len(scoreboard.Leagues) == 0 {
@@ -40,7 +42,7 @@ func Espn() {
 		}
 		// loop over queue and make those API calls
 		for _, apiCall := range queue {
-			scoreboard := getScoreboard(apiCall)
+			scoreboard := getScoreboard(apiCall, year)
 			for _, event := range scoreboard.Events {
 				if len(event.Competitions) == 0 {
 					continue
@@ -141,20 +143,19 @@ func Espn() {
 func generateApiUrl(year string, seasonType string, week string) string {
 	// FBS, group 80
 	// FCS, group 81
-	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?lang=en&region=us&calendartype=blacklist&limit=100&groups=80&dates=" + year + "&seasontype=" + seasonType + "&week=" + week
+	return "http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=" + year + "&seasontype=" + seasonType + "&week=" + week + "&limit=100&groups=80"
 }
 
-func getScoreboard(url string) Scoreboard {
+func getScoreboard(url string, currYear int) Scoreboard {
 	log.Println(url)
 	var scoreboard Scoreboard
-	year, _, _ := time.Now().Date()
 	// Check if cached
-	// Don't cache data from current year since we may have incomplete responses
 	spl := strings.Split(url, "?")
 	filePath := "espn/" + spl[1]
 	var data []byte
 	content, err := os.ReadFile(filePath)
-	if err == nil && !strings.Contains(url, "dates="+strconv.Itoa(year)) {
+	// Don't cache data from current season since we may have incomplete responses
+	if err == nil && !strings.Contains(url, "dates="+strconv.Itoa(currYear)) {
 		data = content
 	} else {
 		// Otherwise fetch and write result to file
