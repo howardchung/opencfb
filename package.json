@@ -18,7 +18,8 @@
   "scripts": {
     "start": "vite --host",
     "preview": "vite preview",
-    "build": "vite build",
+    "build": "vite build && npm run typecheck",
+    "typecheck": "tsc",
     "prettier": "npx prettier --single-quote --write ."
   },
   "devDependencies": {
