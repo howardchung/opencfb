@@ -2,6 +2,14 @@
   "name": "opencfb",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "vite --host",
+    "preview": "vite preview",
+    "build": "vite build && npm run typecheck",
+    "typecheck": "tsc",
+    "prettier": "npx prettier --write ."
+  },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -13,14 +21,6 @@
     "react-router-dom": "^5.3.4",
     "recharts": "^3.5.1",
     "sql.js-httpvfs": "^0.8.12"
-  },
-  "type": "module",
-  "scripts": {
-    "start": "vite --host",
-    "preview": "vite preview",
-    "build": "vite build && npm run typecheck",
-    "typecheck": "tsc",
-    "prettier": "npx prettier --write ."
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
