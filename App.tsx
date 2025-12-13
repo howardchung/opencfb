@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
-import { Switch, Route, BrowserRouter, Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import { Switch, Route, BrowserRouter, Link } from "react-router-dom";
 import {
   Button,
   AppBar,
@@ -22,8 +22,8 @@ import {
   Select,
   InputLabel,
   FormControl,
-} from '@mui/material';
-import GitHubIcon from '@mui/icons-material/GitHub';
+} from "@mui/material";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import {
   LineChart,
   CartesianGrid,
@@ -32,9 +32,9 @@ import {
   Tooltip,
   Line,
   ResponsiveContainer,
-} from 'recharts';
-import { createBrowserHistory } from 'history';
-import { createDbWorker, WorkerHttpvfs } from 'sql.js-httpvfs';
+} from "recharts";
+import { createBrowserHistory } from "history";
+import { createDbWorker, WorkerHttpvfs } from "sql.js-httpvfs";
 
 export const history = createBrowserHistory();
 
@@ -42,9 +42,9 @@ history.listen(() => {
   window.scrollTo(0, 0);
 });
 
-const wasmUrl = new URL('sql.js-httpvfs/dist/sql-wasm.wasm', import.meta.url);
+const wasmUrl = new URL("sql.js-httpvfs/dist/sql-wasm.wasm", import.meta.url);
 const workerUrl = new URL(
-  'sql.js-httpvfs/dist/sqlite.worker.js',
+  "sql.js-httpvfs/dist/sqlite.worker.js",
   import.meta.url,
 );
 let worker: WorkerHttpvfs | null = null;
@@ -55,13 +55,13 @@ async function loadWorker() {
   worker = await createDbWorker(
     [
       {
-        from: 'inline',
+        from: "inline",
         config: {
-          serverMode: 'full',
+          serverMode: "full",
           url:
-            process.env.NODE_ENV === 'development'
-              ? '/opencfb.sqlite.png'
-              : '/opencfb.sqlite.png',
+            process.env.NODE_ENV === "development"
+              ? "/opencfb.sqlite.png"
+              : "/opencfb.sqlite.png",
           requestChunkSize: 4096,
         },
       },
@@ -107,53 +107,53 @@ const Team = ({ teamId }: { teamId: string }) => {
   if (!rows) return <p>Loading...</p>;
   const team = rows[0];
   return (
-    <div style={{ display: 'flex', alignItems: 'center' }}>
+    <div style={{ display: "flex", alignItems: "center" }}>
       {team.logo && (
         <img
           src={team.logo}
-          style={{ height: '150px' }}
+          style={{ height: "150px" }}
           alt={team.displayName}
         />
       )}
-      <div style={{ width: '100%', marginLeft: '20px' }}>
-        <Typography variant="h4" style={{ color: '#' + team.color }}>
+      <div style={{ width: "100%", marginLeft: "20px" }}>
+        <Typography variant="h4" style={{ color: "#" + team.color }}>
           {team.displayName}
         </Typography>
         <div
           style={{
-            backgroundColor: '#' + team.color,
-            color: 'white',
-            fontSize: '12px',
-            padding: '4px',
-            width: 'fit-content',
-            height: 'fit-content',
-            borderRadius: '4px',
+            backgroundColor: "#" + team.color,
+            color: "white",
+            fontSize: "12px",
+            padding: "4px",
+            width: "fit-content",
+            height: "fit-content",
+            borderRadius: "4px",
           }}
         >
           {team.abbreviation}
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-          <div style={{ marginRight: '20px' }}>
+        <div style={{ display: "flex", flexWrap: "wrap" }}>
+          <div style={{ marginRight: "20px" }}>
             <Typography variant="button">Rating</Typography>
-            <Typography style={{ fontSize: '24px', color: 'black' }}>
+            <Typography style={{ fontSize: "24px", color: "black" }}>
               {Math.floor(team.rating)}
             </Typography>
           </div>
-          <div style={{ marginRight: '20px' }}>
+          <div style={{ marginRight: "20px" }}>
             <Typography variant="button">Wins</Typography>
-            <Typography style={{ fontSize: '24px', color: 'green' }}>
+            <Typography style={{ fontSize: "24px", color: "green" }}>
               {team.gamesWon}
             </Typography>
           </div>
-          <div style={{ marginRight: '20px' }}>
+          <div style={{ marginRight: "20px" }}>
             <Typography variant="button">Losses</Typography>
-            <Typography style={{ fontSize: '24px', color: 'red' }}>
+            <Typography style={{ fontSize: "24px", color: "red" }}>
               {team.gamesLost}
             </Typography>
           </div>
-          <div style={{ marginRight: '20px' }}>
+          <div style={{ marginRight: "20px" }}>
             <Typography variant="button">Ties</Typography>
-            <Typography style={{ fontSize: '24px', color: 'gray' }}>
+            <Typography style={{ fontSize: "24px", color: "gray" }}>
               {team.gamesTied}
             </Typography>
           </div>
@@ -185,7 +185,7 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
   return (
     <React.Fragment>
       <Typography variant="button">Rating History</Typography>
-      <ResponsiveContainer width={'100%'} height={300}>
+      <ResponsiveContainer width={"100%"} height={300}>
         <LineChart data={graphData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
@@ -224,7 +224,7 @@ const RankingHistoryGraph = ({ teamId }: { teamId: string }) => {
   return (
     <React.Fragment>
       <Typography variant="button">Rank History</Typography>
-      <ResponsiveContainer width={'100%'} height={300}>
+      <ResponsiveContainer width={"100%"} height={300}>
         <LineChart data={graphData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
@@ -311,56 +311,56 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
               <TableCell
                 align="left"
                 style={{
-                  fontWeight: row.result === 'W' ? 'bold' : undefined,
+                  fontWeight: row.result === "W" ? "bold" : undefined,
                 }}
               >
                 <Link
-                  style={{ color: 'black', textDecoration: 'none' }}
+                  style={{ color: "black", textDecoration: "none" }}
                   to={`/teams/${teamId}`}
                 >
                   {row.displayName}
-                </Link>{' '}
+                </Link>{" "}
                 <Typography variant="caption">
-                  ({Math.floor(row.rating) || 'NR'})
+                  ({Math.floor(row.rating) || "NR"})
                 </Typography>
               </TableCell>
-              <TableCell>{row.field === 'away' ? '@' : 'vs.'}</TableCell>
+              <TableCell>{row.field === "away" ? "@" : "vs."}</TableCell>
               <TableCell>
                 <img className="teamLogo" src={row.opponent.logo} />
               </TableCell>
               <TableCell
                 align="left"
                 style={{
-                  fontWeight: row.opponent.result === 'W' ? 'bold' : undefined,
+                  fontWeight: row.opponent.result === "W" ? "bold" : undefined,
                 }}
               >
                 <Link
-                  style={{ color: 'black', textDecoration: 'none' }}
+                  style={{ color: "black", textDecoration: "none" }}
                   to={`/teams/${row.opponent.id}`}
                 >
                   {row.opponent.displayName}
-                </Link>{' '}
+                </Link>{" "}
                 <Typography variant="caption">
-                  ({Math.floor(row.opponent.rating) || 'NR'})
+                  ({Math.floor(row.opponent.rating) || "NR"})
                 </Typography>
               </TableCell>
               <TableCell
                 align="right"
                 style={{
-                  fontWeight: 'bold',
+                  fontWeight: "bold",
                   color: getColorForResult(row.result),
                 }}
               >
                 {row.result}
               </TableCell>
-              <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
+              <TableCell align="right" style={{ whiteSpace: "nowrap" }}>
                 {row.score} - {row.opponent.score}
               </TableCell>
               <TableCell align="right">
-                <span style={{ color: row.result === 'L' ? 'red' : 'green' }}>
-                  {row.result === 'W' && '+'}
-                  {row.result === 'L' && '-'}
-                  {row.delta.toFixed(1)}{' '}
+                <span style={{ color: row.result === "L" ? "red" : "green" }}>
+                  {row.result === "W" && "+"}
+                  {row.result === "L" && "-"}
+                  {row.delta.toFixed(1)}{" "}
                 </span>
               </TableCell>
             </TableRow>
@@ -417,7 +417,7 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => {
               </TableCell>
               <TableCell align="left">
                 <Link
-                  style={{ color: 'black', textDecoration: 'none' }}
+                  style={{ color: "black", textDecoration: "none" }}
                   to={`/teams/${row.id}`}
                 >
                   {row.displayName}
@@ -425,14 +425,14 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => {
               </TableCell>
               <TableCell align="right">{row.gamesPlayed}</TableCell>
               <TableCell align="right">
-                <span style={{ color: 'green' }}>{row.gamesWon}</span>
-                {' - '}
-                <span style={{ color: 'red' }}>{row.gamesLost}</span>
-                {' - '}
-                <span style={{ color: 'gray' }}>{row.gamesTied}</span>
+                <span style={{ color: "green" }}>{row.gamesWon}</span>
+                {" - "}
+                <span style={{ color: "red" }}>{row.gamesLost}</span>
+                {" - "}
+                <span style={{ color: "gray" }}>{row.gamesTied}</span>
               </TableCell>
               <TableCell align="right">
-                {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + '%'}
+                {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + "%"}
               </TableCell>
             </TableRow>
           ))}
@@ -492,75 +492,77 @@ const Games = () => {
   if (!rows) return <p>Loading...</p>;
   return (
     <>
-    <Typography variant="h6">Games</Typography>
-    <TableContainer component={Paper}>
-      <Table aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell align="left">Date</TableCell>
-            <TableCell></TableCell>
-            <TableCell align="left">Team</TableCell>
-            <TableCell>vs</TableCell>
-            <TableCell align="right">Team</TableCell>
-            <TableCell></TableCell>
-            <TableCell align="left">Score</TableCell>
-            <TableCell align="left">Delta</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row: any, i: number) => (
-            <TableRow key={row.id}>
-              <TableCell align="left">
-                {new Date(row.date).toLocaleDateString()}
-              </TableCell>
-              <TableCell>
-                <img className="teamLogo" src={row.teams[0].logo} />
-              </TableCell>
-              <TableCell
-                align="left"
-                style={{
-                  fontWeight: row.teams[0].result === 'W' ? 'bold' : undefined,
-                }}
-              >
-                <Link
-                  style={{ color: 'black', textDecoration: 'none' }}
-                  to={`/teams/${row.teams[0].id}`}
-                >
-                  {row.teams[0].displayName}
-                </Link>{' '}
-                <Typography variant="caption">
-                  ({Math.floor(row.teams[0].rating) || 'NR'})
-                </Typography>
-              </TableCell>
-              <TableCell>vs.</TableCell>
-              <TableCell
-                align="right"
-                style={{
-                  fontWeight: row.teams[1].result === 'W' ? 'bold' : undefined,
-                }}
-              >
-                <Link
-                  style={{ color: 'black', textDecoration: 'none' }}
-                  to={`/teams/${row.teams[1].id}`}
-                >
-                  {row.teams[1].displayName}
-                </Link>{' '}
-                <Typography variant="caption">
-                  ({Math.floor(row.teams[1].rating) || 'NR'})
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <img className="teamLogo" src={row.teams[1].logo} />
-              </TableCell>
-              <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
-                {row.teams[0].score} - {row.teams[1].score}
-              </TableCell>
-              <TableCell align="right">±{row.delta.toFixed(1)}</TableCell>
+      <Typography variant="h6">Games</Typography>
+      <TableContainer component={Paper}>
+        <Table aria-label="simple table">
+          <TableHead>
+            <TableRow>
+              <TableCell align="left">Date</TableCell>
+              <TableCell></TableCell>
+              <TableCell align="left">Team</TableCell>
+              <TableCell>vs</TableCell>
+              <TableCell align="right">Team</TableCell>
+              <TableCell></TableCell>
+              <TableCell align="left">Score</TableCell>
+              <TableCell align="left">Delta</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {rows.map((row: any, i: number) => (
+              <TableRow key={row.id}>
+                <TableCell align="left">
+                  {new Date(row.date).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <img className="teamLogo" src={row.teams[0].logo} />
+                </TableCell>
+                <TableCell
+                  align="left"
+                  style={{
+                    fontWeight:
+                      row.teams[0].result === "W" ? "bold" : undefined,
+                  }}
+                >
+                  <Link
+                    style={{ color: "black", textDecoration: "none" }}
+                    to={`/teams/${row.teams[0].id}`}
+                  >
+                    {row.teams[0].displayName}
+                  </Link>{" "}
+                  <Typography variant="caption">
+                    ({Math.floor(row.teams[0].rating) || "NR"})
+                  </Typography>
+                </TableCell>
+                <TableCell>vs.</TableCell>
+                <TableCell
+                  align="right"
+                  style={{
+                    fontWeight:
+                      row.teams[1].result === "W" ? "bold" : undefined,
+                  }}
+                >
+                  <Link
+                    style={{ color: "black", textDecoration: "none" }}
+                    to={`/teams/${row.teams[1].id}`}
+                  >
+                    {row.teams[1].displayName}
+                  </Link>{" "}
+                  <Typography variant="caption">
+                    ({Math.floor(row.teams[1].rating) || "NR"})
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <img className="teamLogo" src={row.teams[1].logo} />
+                </TableCell>
+                <TableCell align="right" style={{ whiteSpace: "nowrap" }}>
+                  {row.teams[0].score} - {row.teams[1].score}
+                </TableCell>
+                <TableCell align="right">±{row.delta.toFixed(1)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </>
   );
 };
@@ -630,20 +632,20 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
                 <TableCell>
                   {Math.abs(rankDelta) > 0 && (
                     <span
-                      style={{ color: Number(rankDelta) < 0 ? 'red' : 'green' }}
+                      style={{ color: Number(rankDelta) < 0 ? "red" : "green" }}
                     >
-                      {rankDelta > 0 ? '↑' : '↓'}
+                      {rankDelta > 0 ? "↑" : "↓"}
                       {Math.abs(rankDelta)}
                     </span>
                   )}
                 </TableCell>
                 <TableCell>
-                  <img className="teamLogo" src={row.logo} alt={''} />
+                  <img className="teamLogo" src={row.logo} alt={""} />
                 </TableCell>
                 <TableCell component="th" scope="row">
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div style={{ display: "flex", alignItems: "center" }}>
                     <Link
-                      style={{ color: 'black', textDecoration: 'none' }}
+                      style={{ color: "black", textDecoration: "none" }}
                       to={`/teams/${row.id}`}
                     >
                       {row.displayName}
@@ -657,13 +659,13 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
                       style={{
                         color:
                           Number(delta) === 0
-                            ? 'black'
+                            ? "black"
                             : Number(delta) < 0
-                              ? 'red'
-                              : 'green',
+                              ? "red"
+                              : "green",
                       }}
                     >
-                      {Number(delta) < 0 ? '' : '+'}
+                      {Number(delta) < 0 ? "" : "+"}
                       {delta}
                     </span>
                   </TableCell>
@@ -688,7 +690,7 @@ const Streaks = ({ type }: { type: string }) => {
     JOIN conference on team.conferenceid = conference.id
     LEFT JOIN team_streak on team.id = team_streak.id
     WHERE conference.division = 'fbs'
-    ORDER BY ${type === 'allTime' ? 'allTime' : 'current'} desc
+    ORDER BY ${type === "allTime" ? "allTime" : "current"} desc
     limit 100
     `);
       setRows(data);
@@ -704,8 +706,8 @@ const Streaks = ({ type }: { type: string }) => {
             <TableCell align="left">#</TableCell>
             <TableCell />
             <TableCell align="left">Name</TableCell>
-            {type === 'allTime' ? (
-              <TableCell align="right" style={{ whiteSpace: 'nowrap' }}>
+            {type === "allTime" ? (
+              <TableCell align="right" style={{ whiteSpace: "nowrap" }}>
                 All Time
               </TableCell>
             ) : (
@@ -718,19 +720,19 @@ const Streaks = ({ type }: { type: string }) => {
             <TableRow key={row.id}>
               <TableCell align="left">{i + 1}</TableCell>
               <TableCell>
-                <img className="teamLogo" src={row.logo} alt={''} />
+                <img className="teamLogo" src={row.logo} alt={""} />
               </TableCell>
               <TableCell component="th" scope="row">
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <Link
-                    style={{ color: 'black', textDecoration: 'none' }}
+                    style={{ color: "black", textDecoration: "none" }}
                     to={`/teams/${row.id}`}
                   >
                     {row.displayName}
                   </Link>
                 </div>
               </TableCell>
-              {type === 'allTime' ? (
+              {type === "allTime" ? (
                 <TableCell align="right">{row.allTime}</TableCell>
               ) : (
                 <TableCell align="right">{row.current}</TableCell>
@@ -781,14 +783,14 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      In the{' '}
+      In the{" "}
       <a
         href="https://en.wikipedia.org/wiki/Elo_rating_system"
         rel="noopener noreferrer"
         target="_blank"
       >
         Elo
-      </a>{' '}
+      </a>{" "}
       rating system, ratings change based on the expected result given the
       strength of each player. A strong player defeating a weak one will cause a
       small rating change, while a weak player defeating a strong opponent will
@@ -796,8 +798,7 @@ const Home = () => (
     </Typography>
     <br />
     <Typography>
-      Let's apply it to over 40,000 college football games dating back to
-      1869!
+      Let's apply it to over 40,000 college football games dating back to 1869!
     </Typography>
     <br />
     <Typography variant="button">Notes</Typography>
@@ -856,16 +857,16 @@ const App = () => {
         <Toolbar>
           <Typography
             variant="h6"
-            style={{ textTransform: 'uppercase', fontWeight: 600 }}
+            style={{ textTransform: "uppercase", fontWeight: 600 }}
           >
             <Link
               to="/"
-              style={{ textDecoration: 'none', color: 'white' }}
+              style={{ textDecoration: "none", color: "white" }}
             >{`<OpenCFB/>`}</Link>
           </Typography>
           <Link
             to="/rankings"
-            style={{ textDecoration: 'none', color: 'white' }}
+            style={{ textDecoration: "none", color: "white" }}
           >
             <Button color="inherit">Rankings</Button>
           </Link>
@@ -889,15 +890,15 @@ const App = () => {
               </Link> */}
           <Link
             to="/streaks"
-            style={{ textDecoration: 'none', color: 'white' }}
+            style={{ textDecoration: "none", color: "white" }}
           >
             <Button color="inherit">Streaks</Button>
           </Link>
-          <Link to="/games" style={{ textDecoration: 'none', color: 'white' }}>
+          <Link to="/games" style={{ textDecoration: "none", color: "white" }}>
             <Button color="inherit">Games</Button>
           </Link>
           <a
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: "auto" }}
             href="https://github.com/howardchung/opencfb"
             rel="noopener noreferrer"
             target="_blank"
@@ -908,7 +909,7 @@ const App = () => {
           </a>
         </Toolbar>
       </AppBar>
-      <Container maxWidth={'md'}>
+      <Container maxWidth={"md"}>
         <Switch>
           <Route path="/" exact render={() => <Home />} />
           <Route
@@ -924,11 +925,11 @@ const App = () => {
                 <FormControl>
                   <InputLabel id="rankings-year-label">Year</InputLabel>
                   <Select
-                    style={{ width: '100px' }}
+                    style={{ width: "100px" }}
                     labelId="rankings-year-label"
-                    value={match.params.year || ''}
+                    value={match.params.year || ""}
                     onChange={(e) =>
-                      history.push('/rankings/' + e.target.value)
+                      history.push("/rankings/" + e.target.value)
                     }
                   >
                     {/* <MenuItem value="">Current</MenuItem> */}
@@ -957,11 +958,11 @@ const App = () => {
             path="/streaks"
             render={({ match }) => (
               <>
-              <Typography variant="h6">Streaks</Typography>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <Streaks type="current" />
-                <Streaks type="allTime" />
-              </div>
+                <Typography variant="h6">Streaks</Typography>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <Streaks type="current" />
+                  <Streaks type="allTime" />
+                </div>
               </>
             )}
           />
@@ -974,12 +975,12 @@ const App = () => {
 export default App;
 
 const getColorForResult = (result: string) => {
-  if (result === 'W') {
-    return 'green';
-  } else if (result === 'L') {
-    return 'red';
-  } else if (result === 'T') {
-    return 'gray';
+  if (result === "W") {
+    return "green";
+  } else if (result === "L") {
+    return "red";
+  } else if (result === "T") {
+    return "gray";
   }
-  return 'black';
+  return "black";
 };

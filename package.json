@@ -20,7 +20,7 @@
     "preview": "vite preview",
     "build": "vite build && npm run typecheck",
     "typecheck": "tsc",
-    "prettier": "npx prettier --single-quote --write ."
+    "prettier": "npx prettier --write ."
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
