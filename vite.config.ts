@@ -1,6 +1,6 @@
 export default {
   build: {
-    outDir: "build",
+    outDir: "docs",
   },
   server: {
     allowedHosts: true,
