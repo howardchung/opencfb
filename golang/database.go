@@ -9,7 +9,7 @@ import (
 )
 
 func InitDatabase() *sqlx.DB {
-	connStr := "../public/opencfb.sqlite.mp3"
+	connStr := "../public/opencfb.sqlite.mp4"
 	db := sqlx.MustConnect("sqlite3", connStr)
 	return db
 }

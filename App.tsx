@@ -58,10 +58,7 @@ async function loadWorker() {
         from: "inline",
         config: {
           serverMode: "full",
-          url:
-            process.env.NODE_ENV === "development"
-              ? "/opencfb.sqlite.mp3"
-              : "/opencfb.sqlite.mp3",
+          url: "/opencfb.sqlite.mp4",
           requestChunkSize: 4096,
         },
       },
