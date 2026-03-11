@@ -154,8 +154,8 @@ func getScoreboard(url string, currYear int) Scoreboard {
 	filePath := "espn/" + spl[1]
 	var data []byte
 	content, err := os.ReadFile(filePath)
-	// Don't cache data from current season since we may have incomplete responses
-	if err == nil && !strings.Contains(url, "dates="+strconv.Itoa(currYear)) {
+	if err == nil {
+		// Use the cached file
 		data = content
 	} else {
 		// Otherwise fetch and write result to file
@@ -168,7 +168,10 @@ func getScoreboard(url string, currYear int) Scoreboard {
 			panic(err.Error())
 		}
 		data = body
-		os.WriteFile(filePath, data, 0644)
+		// Don't cache data from current season since we may have incomplete responses
+		if !strings.Contains(url, "dates="+strconv.Itoa(currYear)) {
+			os.WriteFile(filePath, data, 0644)
+		}
 		time.Sleep(500 * time.Millisecond)
 	}
 	err = json.Unmarshal(data, &scoreboard)
