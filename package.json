@@ -28,7 +28,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/react-router-dom": "^5.3.3",
     "typescript": "^5.9.3",
-    "vite": "^7.2.6"
+    "vite": "^7.3.2"
   },
   "browserslist": {
     "production": [
