@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { Switch, Route, Router, Link } from "react-router-dom";
+import {
+  Switch,
+  Route,
+  HashRouter,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import {
   Button,
   AppBar,
@@ -33,14 +39,15 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
-import { createHashHistory } from "history";
 import { createDbWorker, WorkerHttpvfs } from "sql.js-httpvfs";
 
-export const history = createHashHistory();
-
-history.listen(() => {
-  window.scrollTo(0, 0);
-});
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 const wasmUrl = new URL("sql.js-httpvfs/dist/sql-wasm.wasm", import.meta.url);
 const workerUrl = new URL(
@@ -849,7 +856,8 @@ function TabPanel(props: TabPanelProps) {
 
 const App = () => {
   return (
-    <Router history={history}>
+    <HashRouter>
+      <ScrollToTop />
       <AppBar position="static">
         <Toolbar>
           <Typography
@@ -965,7 +973,7 @@ const App = () => {
           />
         </Switch>
       </Container>
-    </Router>
+    </HashRouter>
   );
 };
 
