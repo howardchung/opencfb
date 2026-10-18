@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { Switch, Route, BrowserRouter, Link } from "react-router-dom";
+import { Switch, Route, Router, Link } from "react-router-dom";
 import {
   Button,
   AppBar,
@@ -33,10 +33,10 @@ import {
   Line,
   ResponsiveContainer,
 } from "recharts";
-import { createBrowserHistory } from "history";
+import { createHashHistory } from "history";
 import { createDbWorker, WorkerHttpvfs } from "sql.js-httpvfs";
 
-export const history = createBrowserHistory();
+export const history = createHashHistory();
 
 history.listen(() => {
   window.scrollTo(0, 0);
@@ -58,7 +58,7 @@ async function loadWorker() {
         from: "inline",
         config: {
           serverMode: "full",
-          url: "/opencfb.sqlite.mp4",
+          url: new URL("opencfb.sqlite.mp4", document.baseURI).href,
           requestChunkSize: 4096,
         },
       },
@@ -849,7 +849,7 @@ function TabPanel(props: TabPanelProps) {
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <Router history={history}>
       <AppBar position="static">
         <Toolbar>
           <Typography
@@ -965,7 +965,7 @@ const App = () => {
           />
         </Switch>
       </Container>
-    </BrowserRouter>
+    </Router>
   );
 };
 
