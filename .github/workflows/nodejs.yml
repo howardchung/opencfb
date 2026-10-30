@@ -21,8 +21,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 24.x
-      - run: cd golang && go run *.go
       - run: npm ci
+      - run: npm run build:data
       - run: npm run build
 
       - name: Push to remote
