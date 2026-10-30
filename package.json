@@ -6,10 +6,8 @@
   "scripts": {
     "start": "vite --host",
     "preview": "vite preview",
-    "build": "vite build && npm run typecheck",
+    "build": "npm run build:data && vite build && npm run typecheck",
     "build:data": "node scripts/main.ts",
-    "build:db": "node scripts/main.ts",
-    "build:scripts": "node scripts/main.ts",
     "espn": "SVC=espn node scripts/main.ts",
     "jhowell": "SVC=jhowell node scripts/main.ts",
     "compute": "SVC=compute node scripts/main.ts",
