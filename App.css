@@ -3,8 +3,217 @@
   min-height: 24px;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+    Arial, sans-serif;
+  background-color: #fafafa;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.app-bar {
+  background-color: #1976d2;
+  color: #fff;
+  box-shadow:
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    0 4px 5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 0 24px;
+  gap: 8px;
+}
+
+.brand-link {
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: #fff;
+  text-decoration: none;
+  margin-right: 12px;
+}
+
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02857em;
+  transition: background-color 0.15s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: rgba(0, 0, 0, 0.54);
+  transition: background-color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px 24px 32px;
+  width: 100%;
+}
+
+.table-container {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow:
+    0 2px 1px -1px rgba(0, 0, 0, 0.2),
+    0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 3px 0 rgba(0, 0, 0, 0.12);
+  overflow-x: auto;
+  width: 100%;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(224, 224, 224, 1);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.data-table thead th {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.data-table tbody th {
+  font-weight: 400;
+}
+
+.data-table .align-right {
+  text-align: right;
+}
+
+.data-table .align-left {
+  text-align: left;
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  margin-top: 16px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02857em;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+}
+
+.tab-panel-content {
+  padding: 24px 0;
+}
+
+.typo-h2 {
+  font-size: 3.75rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.typo-h4 {
+  font-size: 2.125rem;
+  font-weight: 400;
+  line-height: 1.235;
+  margin: 0;
+}
+
+.typo-h6 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.typo-body {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.typo-button {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02857em;
+  display: inline-block;
+}
+
+.typo-caption {
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.66;
+}
+
+.form-control {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.year-select {
+  width: 100px;
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  border-radius: 4px;
+  background-color: #fff;
+  color: rgba(0, 0, 0, 0.87);
 }
