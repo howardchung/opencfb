@@ -5,6 +5,7 @@ import {
   Route,
   HashRouter,
   Link,
+  NavLink,
   useLocation,
 } from "react-router-dom";
 import {
@@ -68,6 +69,19 @@ async function loadWorker() {
 //   return null;
 // }
 
+const Loading = () => (
+  <div className="loading-state" role="status" aria-live="polite">
+    <span className="spinner" aria-hidden="true" />
+    <span>Loading...</span>
+  </div>
+);
+
+const getResultBadgeClass = (result: string) => {
+  if (result === "W") return "result-badge result-badge--win";
+  if (result === "L") return "result-badge result-badge--loss";
+  return "result-badge result-badge--tie";
+};
+
 const Team = ({ teamId }: { teamId: string }) => {
   const [rows, setRows] = useState<any>(null);
   useEffect(() => {
@@ -85,62 +99,60 @@ const Team = ({ teamId }: { teamId: string }) => {
     }
     fetch();
   }, [teamId]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   const team = rows[0];
+  const accentColor = team.color ? `#${team.color}` : undefined;
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <section
+      className="team-hero"
+      style={accentColor ? { borderTopColor: accentColor } : undefined}
+    >
       {team.logo && (
-        <img
-          src={team.logo}
-          style={{ height: "150px" }}
-          alt={team.displayName}
-        />
-      )}
-      <div style={{ width: "100%", marginLeft: "20px" }}>
-        <h4 className="typo-h4" style={{ color: "#" + team.color }}>
-          {team.displayName}
-        </h4>
-        <div
-          style={{
-            backgroundColor: "#" + team.color,
-            color: "white",
-            fontSize: "12px",
-            padding: "4px",
-            width: "fit-content",
-            height: "fit-content",
-            borderRadius: "4px",
-          }}
-        >
-          {team.abbreviation}
+        <div className="team-logo-wrap">
+          <img
+            src={team.logo}
+            className="team-logo-lg"
+            alt={team.displayName}
+          />
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap" }}>
-          <div style={{ marginRight: "20px" }}>
-            <span className="typo-button">Rating</span>
-            <p className="typo-body" style={{ fontSize: "24px", color: "black" }}>
-              {Math.floor(team.rating)}
-            </p>
+      )}
+      <div className="team-info">
+        <div className="team-title-row">
+          <h1
+            className="team-name"
+            style={accentColor ? { color: accentColor } : undefined}
+          >
+            {team.displayName}
+          </h1>
+          {team.abbreviation && (
+            <span
+              className="team-abbr"
+              style={{ backgroundColor: accentColor || "#0b192c" }}
+            >
+              {team.abbreviation}
+            </span>
+          )}
+        </div>
+        <div className="stat-grid">
+          <div className="stat-card">
+            <span className="stat-label">Rating</span>
+            <p className="stat-value">{Math.floor(team.rating)}</p>
           </div>
-          <div style={{ marginRight: "20px" }}>
-            <span className="typo-button">Wins</span>
-            <p className="typo-body" style={{ fontSize: "24px", color: "green" }}>
-              {team.gamesWon}
-            </p>
+          <div className="stat-card">
+            <span className="stat-label">Wins</span>
+            <p className="stat-value stat-value--win">{team.gamesWon}</p>
           </div>
-          <div style={{ marginRight: "20px" }}>
-            <span className="typo-button">Losses</span>
-            <p className="typo-body" style={{ fontSize: "24px", color: "red" }}>
-              {team.gamesLost}
-            </p>
+          <div className="stat-card">
+            <span className="stat-label">Losses</span>
+            <p className="stat-value stat-value--loss">{team.gamesLost}</p>
           </div>
-          <div style={{ marginRight: "20px" }}>
-            <span className="typo-button">Ties</span>
-            <p className="typo-body" style={{ fontSize: "24px", color: "gray" }}>
-              {team.gamesTied}
-            </p>
+          <div className="stat-card">
+            <span className="stat-label">Ties</span>
+            <p className="stat-value stat-value--tie">{team.gamesTied}</p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
@@ -161,24 +173,34 @@ const RatingGraph = ({ teamId }: { teamId: string }) => {
     }
     fetch();
   }, [teamId]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   const graphData = rows;
   return (
-    <React.Fragment>
-      <span className="typo-button">Rating History</span>
-      <ResponsiveContainer width={"100%"} height={300}>
+    <div className="chart-card">
+      <h2 className="chart-title">Rating History</h2>
+      <ResponsiveContainer width="100%" height={260}>
         <LineChart data={graphData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="year" />
-          <YAxis />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#64748b" }} />
+          <YAxis tick={{ fontSize: 12, fill: "#64748b" }} />
           <Tooltip
-          // labelFormatter={(label) => new Date(label).toLocaleDateString()}
-          // formatter={(value, name, props) => [value]}
+            contentStyle={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              fontSize: "12px",
+            }}
           />
-          <Line dot={false} type="natural" dataKey="rating" stroke="#8884d8" />
+          <Line
+            dot={false}
+            type="natural"
+            dataKey="rating"
+            stroke="#0f766e"
+            strokeWidth={2}
+          />
         </LineChart>
       </ResponsiveContainer>
-    </React.Fragment>
+    </div>
   );
 };
 
@@ -200,24 +222,34 @@ const RankingHistoryGraph = ({ teamId }: { teamId: string }) => {
     }
     fetch();
   }, [teamId]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   const graphData = rows;
   return (
-    <React.Fragment>
-      <span className="typo-button">Rank History</span>
-      <ResponsiveContainer width={"100%"} height={300}>
+    <div className="chart-card">
+      <h2 className="chart-title">Rank History</h2>
+      <ResponsiveContainer width="100%" height={260}>
         <LineChart data={graphData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="year" />
-          <YAxis reversed />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#64748b" }} />
+          <YAxis reversed tick={{ fontSize: 12, fill: "#64748b" }} />
           <Tooltip
-          // labelFormatter={(label) => new Date(label).toLocaleDateString()}
-          // formatter={(value, name, props) => [value]}
+            contentStyle={{
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              fontSize: "12px",
+            }}
           />
-          <Line dot={false} type="natural" dataKey="rank" stroke="#8884d8" />
+          <Line
+            dot={false}
+            type="natural"
+            dataKey="rank"
+            stroke="#0b192c"
+            strokeWidth={2}
+          />
         </LineChart>
       </ResponsiveContainer>
-    </React.Fragment>
+    </div>
   );
 };
 
@@ -263,17 +295,15 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
     }
     fetch();
   }, [teamId, limit]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   return (
-    <div className="table-container">
-      <table className="data-table" aria-label="simple table">
+    <div className="table-wrap">
+      <table className="data-table" aria-label="Team games">
         <thead>
           <tr>
             <th className="align-left">Date</th>
-            <th />
-            <th />
-            <th />
-            <th />
+            <th className="align-left">Team</th>
+            <th className="align-center" />
             <th className="align-left">Opponent</th>
             <th className="align-right">Result</th>
             <th className="align-right">Score</th>
@@ -286,62 +316,50 @@ const TeamGames = ({ teamId, limit }: { teamId: string; limit: number }) => {
               <td className="align-left">
                 {new Date(row.date).toLocaleDateString()}
               </td>
-              <td>
-                <img className="teamLogo" src={row.logo} />
+              <td className="align-left">
+                <div className="team-cell">
+                  <img className="team-logo" src={row.logo} alt="" />
+                  <Link
+                    className={`team-link${row.result === "W" ? " team-link--winner" : ""}`}
+                    to={`/teams/${teamId}`}
+                  >
+                    {row.displayName}
+                  </Link>
+                  <span className="rating-inline">
+                    ({Math.floor(row.rating) || "NR"})
+                  </span>
+                </div>
               </td>
-              <td
-                className="align-left"
-                style={{
-                  fontWeight: row.result === "W" ? "bold" : undefined,
-                }}
-              >
-                <Link
-                  style={{ color: "black", textDecoration: "none" }}
-                  to={`/teams/${teamId}`}
-                >
-                  {row.displayName}
-                </Link>{" "}
-                <span className="typo-caption">
-                  ({Math.floor(row.rating) || "NR"})
+              <td className="vs-cell">{row.field === "away" ? "@" : "vs."}</td>
+              <td className="align-left">
+                <div className="team-cell">
+                  <img className="team-logo" src={row.opponent.logo} alt="" />
+                  <Link
+                    className={`team-link${row.opponent.result === "W" ? " team-link--winner" : ""}`}
+                    to={`/teams/${row.opponent.id}`}
+                  >
+                    {row.opponent.displayName}
+                  </Link>
+                  <span className="rating-inline">
+                    ({Math.floor(row.opponent.rating) || "NR"})
+                  </span>
+                </div>
+              </td>
+              <td className="align-right">
+                <span className={getResultBadgeClass(row.result)}>
+                  {row.result}
                 </span>
               </td>
-              <td>{row.field === "away" ? "@" : "vs."}</td>
-              <td>
-                <img className="teamLogo" src={row.opponent.logo} />
-              </td>
-              <td
-                className="align-left"
-                style={{
-                  fontWeight: row.opponent.result === "W" ? "bold" : undefined,
-                }}
-              >
-                <Link
-                  style={{ color: "black", textDecoration: "none" }}
-                  to={`/teams/${row.opponent.id}`}
-                >
-                  {row.opponent.displayName}
-                </Link>{" "}
-                <span className="typo-caption">
-                  ({Math.floor(row.opponent.rating) || "NR"})
-                </span>
-              </td>
-              <td
-                className="align-right"
-                style={{
-                  fontWeight: "bold",
-                  color: getColorForResult(row.result),
-                }}
-              >
-                {row.result}
-              </td>
-              <td className="align-right" style={{ whiteSpace: "nowrap" }}>
+              <td className="align-right score-cell">
                 {row.score} - {row.opponent.score}
               </td>
               <td className="align-right">
-                <span style={{ color: row.result === "L" ? "red" : "green" }}>
+                <span
+                  className={row.result === "L" ? "delta-neg" : "delta-pos"}
+                >
                   {row.result === "W" && "+"}
                   {row.result === "L" && "-"}
-                  {row.delta.toFixed(1)}{" "}
+                  {row.delta.toFixed(1)}
                 </span>
               </td>
             </tr>
@@ -377,40 +395,36 @@ const TeamRivalry = ({ teamId }: { teamId: string }) => {
     }
     fetch();
   }, [teamId]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   return (
-    <div className="table-container">
-      <table className="data-table" aria-label="simple table">
+    <div className="table-wrap">
+      <table className="data-table" aria-label="Team rivalries">
         <thead>
           <tr>
-            <th />
             <th className="align-left">Opponent</th>
             <th className="align-right">Games Played</th>
-            <th className="align-right">WLT</th>
+            <th className="align-right">W-L-T</th>
             <th className="align-right">Win %</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row: any) => (
             <tr key={row.id}>
-              <td>
-                <img className="teamLogo" src={row.logo} />
-              </td>
               <td className="align-left">
-                <Link
-                  style={{ color: "black", textDecoration: "none" }}
-                  to={`/teams/${row.id}`}
-                >
-                  {row.displayName}
-                </Link>
+                <div className="team-cell">
+                  <img className="team-logo" src={row.logo} alt="" />
+                  <Link className="team-link" to={`/teams/${row.id}`}>
+                    {row.displayName}
+                  </Link>
+                </div>
               </td>
               <td className="align-right">{row.gamesPlayed}</td>
               <td className="align-right">
-                <span style={{ color: "green" }}>{row.gamesWon}</span>
+                <span className="wlt-win">{row.gamesWon}</span>
                 {" - "}
-                <span style={{ color: "red" }}>{row.gamesLost}</span>
+                <span className="wlt-loss">{row.gamesLost}</span>
                 {" - "}
-                <span style={{ color: "gray" }}>{row.gamesTied}</span>
+                <span className="wlt-tie">{row.gamesTied}</span>
               </td>
               <td className="align-right">
                 {((row.gamesWon / row.gamesPlayed) * 100).toFixed(2) + "%"}
@@ -468,24 +482,27 @@ const Games = () => {
       setRows(final);
     }
     fetch();
-  });
+  }, []);
 
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   return (
     <>
-      <h6 className="typo-h6">Games</h6>
-      <div className="table-container">
-        <table className="data-table" aria-label="simple table">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Games</h1>
+          <p className="page-subtitle">Most recent 100 rated matchups</p>
+        </div>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table" aria-label="Recent games">
           <thead>
             <tr>
               <th className="align-left">Date</th>
-              <th></th>
               <th className="align-left">Team</th>
-              <th>vs</th>
-              <th className="align-right">Team</th>
-              <th></th>
-              <th className="align-left">Score</th>
-              <th className="align-left">Delta</th>
+              <th className="align-center">vs</th>
+              <th className="align-left">Team</th>
+              <th className="align-right">Score</th>
+              <th className="align-right">Delta</th>
             </tr>
           </thead>
           <tbody>
@@ -494,51 +511,49 @@ const Games = () => {
                 <td className="align-left">
                   {new Date(row.date).toLocaleDateString()}
                 </td>
-                <td>
-                  <img className="teamLogo" src={row.teams[0].logo} />
+                <td className="align-left">
+                  <div className="team-cell">
+                    <img
+                      className="team-logo"
+                      src={row.teams[0].logo}
+                      alt=""
+                    />
+                    <Link
+                      className={`team-link${row.teams[0].result === "W" ? " team-link--winner" : ""}`}
+                      to={`/teams/${row.teams[0].id}`}
+                    >
+                      {row.teams[0].displayName}
+                    </Link>
+                    <span className="rating-inline">
+                      ({Math.floor(row.teams[0].rating) || "NR"})
+                    </span>
+                  </div>
                 </td>
-                <td
-                  className="align-left"
-                  style={{
-                    fontWeight:
-                      row.teams[0].result === "W" ? "bold" : undefined,
-                  }}
-                >
-                  <Link
-                    style={{ color: "black", textDecoration: "none" }}
-                    to={`/teams/${row.teams[0].id}`}
-                  >
-                    {row.teams[0].displayName}
-                  </Link>{" "}
-                  <span className="typo-caption">
-                    ({Math.floor(row.teams[0].rating) || "NR"})
-                  </span>
+                <td className="vs-cell">vs.</td>
+                <td className="align-left">
+                  <div className="team-cell">
+                    <img
+                      className="team-logo"
+                      src={row.teams[1].logo}
+                      alt=""
+                    />
+                    <Link
+                      className={`team-link${row.teams[1].result === "W" ? " team-link--winner" : ""}`}
+                      to={`/teams/${row.teams[1].id}`}
+                    >
+                      {row.teams[1].displayName}
+                    </Link>
+                    <span className="rating-inline">
+                      ({Math.floor(row.teams[1].rating) || "NR"})
+                    </span>
+                  </div>
                 </td>
-                <td>vs.</td>
-                <td
-                  className="align-right"
-                  style={{
-                    fontWeight:
-                      row.teams[1].result === "W" ? "bold" : undefined,
-                  }}
-                >
-                  <Link
-                    style={{ color: "black", textDecoration: "none" }}
-                    to={`/teams/${row.teams[1].id}`}
-                  >
-                    {row.teams[1].displayName}
-                  </Link>{" "}
-                  <span className="typo-caption">
-                    ({Math.floor(row.teams[1].rating) || "NR"})
-                  </span>
-                </td>
-                <td>
-                  <img className="teamLogo" src={row.teams[1].logo} />
-                </td>
-                <td className="align-right" style={{ whiteSpace: "nowrap" }}>
+                <td className="align-right score-cell">
                   {row.teams[0].score} - {row.teams[1].score}
                 </td>
-                <td className="align-right">±{row.delta.toFixed(1)}</td>
+                <td className="align-right delta-zero">
+                  ±{row.delta.toFixed(1)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -583,7 +598,7 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
     }
     fetch();
   }, [setRows, limit, year]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   // return <pre>{JSON.stringify(data, null, 2)}</pre>;
   const prevRankings = [...rows].sort((a, b) => b.prevRating - a.prevRating);
   const prevRankingsMap = new Map<Number, Number>();
@@ -591,14 +606,13 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
     prevRankingsMap.set(row.id, i);
   });
   return (
-    <div className="table-container">
-      <table className="data-table" aria-label="simple table">
+    <div className="table-wrap">
+      <table className="data-table" aria-label="Team rankings">
         <thead>
           <tr>
             <th className="align-left">#</th>
-            <th />
-            <th />
-            <th className="align-left">Name</th>
+            <th className="align-center" />
+            <th className="align-left">Team</th>
             <th className="align-right">Rating</th>
             {!Boolean(year) && <th className="align-right">Delta</th>}
           </tr>
@@ -609,42 +623,40 @@ const Rankings = ({ limit, year }: { limit: number; year?: number }) => {
             const rankDelta = Number(prevRankingsMap.get(row.id)) - i;
             return (
               <tr key={row.id}>
-                <td className="align-left">{i + 1} </td>
-                <td>
+                <td className="align-left rank-col">{i + 1}</td>
+                <td className="align-center">
                   {Math.abs(rankDelta) > 0 && (
                     <span
-                      style={{ color: Number(rankDelta) < 0 ? "red" : "green" }}
+                      className={
+                        Number(rankDelta) < 0 ? "delta-neg" : "delta-pos"
+                      }
                     >
                       {rankDelta > 0 ? "↑" : "↓"}
                       {Math.abs(rankDelta)}
                     </span>
                   )}
                 </td>
-                <td>
-                  <img className="teamLogo" src={row.logo} alt={""} />
-                </td>
                 <th scope="row">
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <Link
-                      style={{ color: "black", textDecoration: "none" }}
-                      to={`/teams/${row.id}`}
-                    >
+                  <div className="team-cell">
+                    <img className="team-logo" src={row.logo} alt="" />
+                    <Link className="team-link" to={`/teams/${row.id}`}>
                       {row.displayName}
                     </Link>
                   </div>
                 </th>
-                <td className="align-right">{Math.floor(row.rating)}</td>
+                <td className="align-right rating-value">
+                  {Math.floor(row.rating)}
+                </td>
                 {!Boolean(year) && (
                   <td className="align-right">
                     <span
-                      style={{
-                        color:
-                          Number(delta) === 0
-                            ? "black"
-                            : Number(delta) < 0
-                              ? "red"
-                              : "green",
-                      }}
+                      className={
+                        Number(delta) === 0
+                          ? "delta-zero"
+                          : Number(delta) < 0
+                            ? "delta-neg"
+                            : "delta-pos"
+                      }
                     >
                       {Number(delta) < 0 ? "" : "+"}
                       {delta}
@@ -678,50 +690,43 @@ const Streaks = ({ type }: { type: string }) => {
     }
     fetch();
   }, [type]);
-  if (!rows) return <p>Loading...</p>;
+  if (!rows) return <Loading />;
   return (
-    <div className="table-container">
-      <table className="data-table" aria-label="simple table">
-        <thead>
-          <tr>
-            <th className="align-left">#</th>
-            <th />
-            <th className="align-left">Name</th>
-            {type === "allTime" ? (
-              <th className="align-right" style={{ whiteSpace: "nowrap" }}>
-                All Time
+    <div>
+      <h2 className="section-title">
+        {type === "allTime" ? "All-Time Streaks" : "Current Streaks"}
+      </h2>
+      <div className="table-wrap">
+        <table className="data-table" aria-label="Win streaks">
+          <thead>
+            <tr>
+              <th className="align-left">#</th>
+              <th className="align-left">Team</th>
+              <th className="align-right">
+                {type === "allTime" ? "All Time" : "Current"}
               </th>
-            ) : (
-              <th className="align-right">Current</th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row: any, i: number) => (
-            <tr key={row.id}>
-              <td className="align-left">{i + 1}</td>
-              <td>
-                <img className="teamLogo" src={row.logo} alt={""} />
-              </td>
-              <th scope="row">
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <Link
-                    style={{ color: "black", textDecoration: "none" }}
-                    to={`/teams/${row.id}`}
-                  >
-                    {row.displayName}
-                  </Link>
-                </div>
-              </th>
-              {type === "allTime" ? (
-                <td className="align-right">{row.allTime}</td>
-              ) : (
-                <td className="align-right">{row.current}</td>
-              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row: any, i: number) => (
+              <tr key={row.id}>
+                <td className="align-left rank-col">{i + 1}</td>
+                <th scope="row">
+                  <div className="team-cell">
+                    <img className="team-logo" src={row.logo} alt="" />
+                    <Link className="team-link" to={`/teams/${row.id}`}>
+                      {row.displayName}
+                    </Link>
+                  </div>
+                </th>
+                <td className="align-right rating-value">
+                  {type === "allTime" ? row.allTime : row.current}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
@@ -736,8 +741,10 @@ const TeamPage = ({ teamId }: { teamId: string | undefined }) => {
   return (
     <div>
       <Team teamId={teamId} />
-      <RatingGraph teamId={teamId} />
-      <RankingHistoryGraph teamId={teamId} />
+      <div className="charts-grid">
+        <RatingGraph teamId={teamId} />
+        <RankingHistoryGraph teamId={teamId} />
+      </div>
       <div className="tabs" role="tablist">
         <button
           type="button"
@@ -770,49 +777,49 @@ const TeamPage = ({ teamId }: { teamId: string | undefined }) => {
 
 const Home = () => (
   <div>
-    <h2 className="typo-h2">What if...</h2>
-    <h4 className="typo-h4">
-      college football teams were rated like chess players?
-    </h4>
-    <br />
-    <p className="typo-body">
-      In the{" "}
-      <a
-        href="https://en.wikipedia.org/wiki/Elo_rating_system"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        Elo
-      </a>{" "}
-      rating system, ratings change based on the expected result given the
-      strength of each player. A strong player defeating a weak one will cause a
-      small rating change, while a weak player defeating a strong opponent will
-      cause a bigger change.
-    </p>
-    <br />
-    <p className="typo-body">
-      Let's apply it to over 40,000 college football games dating back to 1869!
-    </p>
-    <br />
-    <span className="typo-button">Notes</span>
-    <ul>
-      <li>
-        <span className="typo-caption">
-          The initial rating value is 1000 and the k-value is 32.
-        </span>
-      </li>
-      <li>
-        <span className="typo-caption">
-          This means the first time a team shows up, they're assigned a value of
-          1000, and the maximum rating gain/loss for a game is 32.
-        </span>
-      </li>
-      <li>
-        <span className="typo-caption">
-          Only games involving current FBS teams are rated.
-        </span>
-      </li>
-    </ul>
+    <section className="hero-card">
+      <h1 className="hero-title">What if...</h1>
+      <p className="hero-subtitle">
+        college football teams were rated like chess players?
+      </p>
+      <p className="hero-copy">
+        In the{" "}
+        <a
+          href="https://en.wikipedia.org/wiki/Elo_rating_system"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Elo
+        </a>{" "}
+        rating system, ratings change based on the expected result given the
+        strength of each player. A strong player defeating a weak one will cause
+        a small rating change, while a weak player defeating a strong opponent
+        will cause a bigger change.
+      </p>
+      <p className="hero-copy">
+        Let's apply it to over 40,000 college football games dating back to 1869!
+      </p>
+      <div className="elo-specs">
+        <div className="elo-spec-item">
+          <span className="elo-spec-label">Initial Rating</span>
+          <span className="elo-spec-value">
+            Every team starts at 1000 on their first appearance.
+          </span>
+        </div>
+        <div className="elo-spec-item">
+          <span className="elo-spec-label">K-Factor: 32</span>
+          <span className="elo-spec-value">
+            Maximum rating gain or loss for a single game is 32.
+          </span>
+        </div>
+        <div className="elo-spec-item">
+          <span className="elo-spec-label">Scope</span>
+          <span className="elo-spec-value">
+            Only games involving current FBS teams are rated.
+          </span>
+        </div>
+      </div>
+    </section>
     <Rankings limit={200} />
   </div>
 );
@@ -834,7 +841,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`simple-tab-${index}`}
       {...other}
     >
-      {value === index && <div className="tab-panel-content">{children}</div>}
+      {value === index && <div>{children}</div>}
     </div>
   );
 }
@@ -843,30 +850,32 @@ const App = () => {
   return (
     <HashRouter>
       <ScrollToTop />
-      <header className="app-bar">
-        <div className="toolbar">
+      <header className="site-header">
+        <div className="site-header-inner">
           <Link to="/" className="brand-link">
             {`<OpenCFB/>`}
           </Link>
-          <Link to="/rankings" className="nav-link">
-            Rankings
-          </Link>
-          <Link to="/streaks" className="nav-link">
-            Streaks
-          </Link>
-          <Link to="/games" className="nav-link">
-            Games
-          </Link>
+          <nav className="nav-links" aria-label="Primary">
+            <NavLink to="/rankings" className="nav-link">
+              Rankings
+            </NavLink>
+            <NavLink to="/streaks" className="nav-link">
+              Streaks
+            </NavLink>
+            <NavLink to="/games" className="nav-link">
+              Games
+            </NavLink>
+          </nav>
           <a
-            className="icon-btn"
+            className="github-link"
             aria-label="GitHub"
             href="https://github.com/howardchung/opencfb"
             rel="noopener noreferrer"
             target="_blank"
           >
             <svg
-              width="24"
-              height="24"
+              width="22"
+              height="22"
               viewBox="0 0 24 24"
               fill="currentColor"
               aria-hidden="true"
@@ -876,7 +885,7 @@ const App = () => {
           </a>
         </div>
       </header>
-      <main className="container">
+      <main className="main-container">
         <Switch>
           <Route path="/" exact render={() => <Home />} />
           <Route
@@ -888,37 +897,49 @@ const App = () => {
             path="/rankings/:year?"
             render={({ match, history }) => (
               <React.Fragment>
-                <h6 className="typo-h6">Rankings</h6>
-                <div className="form-control">
-                  <label className="form-label" htmlFor="rankings-year-select">
-                    Year
-                  </label>
-                  <select
-                    id="rankings-year-select"
-                    className="year-select"
-                    value={match.params.year || ""}
-                    onChange={(e) =>
-                      history.push("/rankings/" + e.target.value)
-                    }
-                  >
-                    {/* starting year one higher if we're past january */}
-                    {Array.from(
-                      new Array(
-                        new Date().getFullYear() -
+                <div className="page-header">
+                  <div>
+                    <h1 className="page-title">Rankings</h1>
+                    <p className="page-subtitle">
+                      {match.params.year
+                        ? `End-of-season Elo standings for ${match.params.year}`
+                        : "All-time current FBS Elo standings"}
+                    </p>
+                  </div>
+                  <div className="select-group">
+                    <label
+                      className="select-label"
+                      htmlFor="rankings-year-select"
+                    >
+                      Year
+                    </label>
+                    <select
+                      id="rankings-year-select"
+                      className="year-select"
+                      value={match.params.year || ""}
+                      onChange={(e) =>
+                        history.push("/rankings/" + e.target.value)
+                      }
+                    >
+                      {/* starting year one higher if we're past january */}
+                      {Array.from(
+                        new Array(
+                          new Date().getFullYear() -
+                            (new Date().getMonth() > 0 ? 0 : 1) -
+                            1869 +
+                            1,
+                        ),
+                        (x, i) =>
+                          new Date().getFullYear() -
                           (new Date().getMonth() > 0 ? 0 : 1) -
-                          1869 +
-                          1,
-                      ),
-                      (x, i) =>
-                        new Date().getFullYear() -
-                        (new Date().getMonth() > 0 ? 0 : 1) -
-                        i,
-                    ).map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
+                          i,
+                      ).map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <Rankings limit={500} year={Number(match.params.year)} />
               </React.Fragment>
@@ -928,8 +949,15 @@ const App = () => {
             path="/streaks"
             render={() => (
               <>
-                <h6 className="typo-h6">Streaks</h6>
-                <div style={{ display: "flex", gap: "12px" }}>
+                <div className="page-header">
+                  <div>
+                    <h1 className="page-title">Streaks</h1>
+                    <p className="page-subtitle">
+                      Longest active and historical FBS winning streaks
+                    </p>
+                  </div>
+                </div>
+                <div className="streaks-grid">
                   <Streaks type="current" />
                   <Streaks type="allTime" />
                 </div>
@@ -943,14 +971,3 @@ const App = () => {
 };
 
 export default App;
-
-const getColorForResult = (result: string) => {
-  if (result === "W") {
-    return "green";
-  } else if (result === "L") {
-    return "red";
-  } else if (result === "T") {
-    return "gray";
-  }
-  return "black";
-};
